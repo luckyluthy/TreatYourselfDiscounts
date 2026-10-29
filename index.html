@@ -37,6 +37,9 @@
   .deal .offer { font-size: 13px; color: #4a6b78; }
   .search-row input { width: 100%; box-sizing: border-box; font-size: 15px; padding: 12px 16px; border-radius: 999px; border: 2px solid transparent; background: linear-gradient(#fff, #fff) padding-box, linear-gradient(160deg, #ffe066, #bfe6f2) border-box; outline: none; color: #23414d; }
   #no-results { text-align: center; color: #4a6b78; margin: 8px 0; }
+  .filter-row { display: flex; gap: 8px; margin: 0 0 16px; }
+  .filter-row label { flex: 1; font-size: 13px; font-weight: 700; color: #4a6b78; }
+  .filter-row select { width: 100%; margin-top: 4px; font-size: 14px; padding: 10px 12px; border-radius: 999px; border: 2px solid transparent; background: linear-gradient(#fff, #fff) padding-box, linear-gradient(160deg, #ffe066, #bfe6f2) border-box; color: #23414d; outline: none; }
   .brand-side { margin-top: 16px; }
   .brand-side h3 { font-size: 13px; color: #4a6b78; margin: 0 0 8px; letter-spacing: .04em; text-transform: uppercase; }
   .brand-list { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
@@ -117,46 +120,47 @@
   <main class="links">
     <div class="search-row"><input id="deal-search" type="search" placeholder="Search deals..." aria-label="Search deals"></div>
     <p id="no-results" hidden>No deals match your search.</p>
-    <a class="card" href="brands/bur-bur.html" target="_blank" rel="noopener">
+    <div class="filter-row"><label>Category <select id="brand-category" aria-label="Filter brands by category"><option value="">All brands</option><option value="fashion">Fashion</option><option value="beauty">Beauty</option><option value="tech">Tech</option><option value="wellness">Wellness</option><option value="home">Home and Sleep</option></select></label><label>Sort <select id="brand-sort" aria-label="Sort brands"><option value="linktree">Linktree order</option><option value="az">A to Z</option><option value="za">Z to A</option></select></label></div>
+    <a class="card" data-category="beauty" href="brands/bur-bur.html" target="_blank" rel="noopener">
       <span class="info"><span class="name">Bur Bur Hair Care</span><br><span class="offer">15% off</span><br><span class="chip">Code: TYD15</span></span>
       <span class="arrow" aria-hidden="true">&#8250;</span>
-    </a><a class="card" href="brands/rorry.html" target="_blank" rel="noopener">
+    </a><a class="card" data-category="tech" href="brands/rorry.html" target="_blank" rel="noopener">
       <span class="info"><span class="name">Rorry Chargers</span><br><span class="offer">10% off</span><br><span class="chip">Code: TYD10</span></span>
       <span class="arrow" aria-hidden="true">&#8250;</span>
-    </a><a class="card" href="brands/fanttik.html" target="_blank" rel="noopener">
+    </a><a class="card" data-category="tech" href="brands/fanttik.html" target="_blank" rel="noopener">
       <span class="info"><span class="name">Fanttik</span><br><span class="offer">Shop Fanttik</span></span>
       <span class="arrow" aria-hidden="true">&#8250;</span>
-    </a><a class="card" href="brands/glocusent.html" target="_blank" rel="noopener">
+    </a><a class="card" data-category="home" href="brands/glocusent.html" target="_blank" rel="noopener">
       <span class="info"><span class="name">Glocusent Reading Lights</span><br><span class="offer">Shop Glocusent</span></span>
       <span class="arrow" aria-hidden="true">&#8250;</span>
-    </a><a class="card" href="brands/soundcore.html" target="_blank" rel="noopener">
+    </a><a class="card" data-category="tech" href="brands/soundcore.html" target="_blank" rel="noopener">
       <span class="info"><span class="name">Soundcore</span><br><span class="offer">Extra 20% off full-price items</span><br><span class="chip">Code: AFSC20</span></span>
       <span class="arrow" aria-hidden="true">&#8250;</span>
-    </a><a class="card" href="brands/aurzen.html" target="_blank" rel="noopener">
+    </a><a class="card" data-category="tech" href="brands/aurzen.html" target="_blank" rel="noopener">
       <span class="info"><span class="name">Aurzen Projectors</span><br><span class="offer">10% off</span><br><span class="chip">Code: CJ10</span></span>
       <span class="arrow" aria-hidden="true">&#8250;</span>
-    </a><a class="card" href="brands/lotus-and-luna.html" target="_blank" rel="noopener">
+    </a><a class="card" data-category="fashion" href="brands/lotus-and-luna.html" target="_blank" rel="noopener">
       <span class="info"><span class="name">Lotus and Luna</span><br><span class="offer">20% off</span></span>
       <span class="arrow" aria-hidden="true">&#8250;</span>
-    </a><a class="card" href="brands/seeq.html" target="_blank" rel="noopener">
+    </a><a class="card" data-category="wellness" href="brands/seeq.html" target="_blank" rel="noopener">
       <span class="info"><span class="name">SEEQ Clear Protein</span><br><span class="offer">10% off through this link</span></span>
       <span class="arrow" aria-hidden="true">&#8250;</span>
-    </a><a class="card" href="brands/mellow-sleep.html" target="_blank" rel="noopener">
+    </a><a class="card" data-category="home" href="brands/mellow-sleep.html" target="_blank" rel="noopener">
       <span class="info"><span class="name">Mellow Sleep</span><br><span class="offer">15% off through this link</span></span>
       <span class="arrow" aria-hidden="true">&#8250;</span>
-    </a><a class="card" href="brands/ridge.html" target="_blank" rel="noopener">
+    </a><a class="card" data-category="fashion" href="brands/ridge.html" target="_blank" rel="noopener">
       <span class="info"><span class="name">Ridge</span><br><span class="offer">Shop Ridge</span></span>
       <span class="arrow" aria-hidden="true">&#8250;</span>
-    </a><a class="card" href="brands/im8-health.html" target="_blank" rel="noopener">
+    </a><a class="card" data-category="wellness" href="brands/im8-health.html" target="_blank" rel="noopener">
       <span class="info"><span class="name">IM8 Health</span><br><span class="offer">10% off</span><br><span class="chip">Code: Take10</span></span>
       <span class="arrow" aria-hidden="true">&#8250;</span>
-    </a><a class="card" href="brands/weekend-sleepover.html" target="_blank" rel="noopener">
+    </a><a class="card" data-category="fashion" href="brands/weekend-sleepover.html" target="_blank" rel="noopener">
       <span class="info"><span class="name">Weekend Sleepover</span><br><span class="offer">10% off sleepwear and robes</span><br><span class="chip">Code: LUCY59928</span></span>
       <span class="arrow" aria-hidden="true">&#8250;</span>
-    </a><a class="card" href="brands/ryze.html" target="_blank" rel="noopener">
+    </a><a class="card" data-category="wellness" href="brands/ryze.html" target="_blank" rel="noopener">
       <span class="info"><span class="name">Ryze Mushroom Coffee</span><br><span class="offer">15% off through this link</span></span>
       <span class="arrow" aria-hidden="true">&#8250;</span>
-    </a></details>
+    </a>
     <details id="postpartum" open><summary><span class="section-title">Postpartum Picks</span><span class="chev">▾</span></summary>
     <a class="card" href="https://www.amazon.com/dp/B0CPL9CTT8?tag=treatyour09a8-20" target="_blank" rel="noopener">
       <span class="info"><span class="name">Perelel</span><br><span class="offer">$58.76 · Amazon</span></span>
@@ -236,9 +240,25 @@
 </div>
   <script>if ("serviceWorker" in navigator) { window.addEventListener("load", function() { navigator.serviceWorker.register("sw.js"); }); }  const searchInput = document.getElementById('deal-search');
   const noResults = document.getElementById('no-results');
-  searchInput.addEventListener('input', () => {
+  const categorySelect = document.getElementById('brand-category');
+  const sortSelect = document.getElementById('brand-sort');
+  const brandCards = Array.from(document.querySelectorAll('main a.card[href^="brands/"]'));
+  const brandAnchor = document.getElementById('postpartum');
+  const linktreeOrder = brandCards.slice();
+  function brandName(card) { return card.querySelector('.name').textContent.trim().toLowerCase(); }
+  function applyFilters() {
     const term = searchInput.value.trim().toLowerCase();
+    const cat = categorySelect.value;
+    let sorted = linktreeOrder.slice();
+    if (sortSelect.value === 'az') sorted.sort((a, b) => brandName(a).localeCompare(brandName(b)));
+    if (sortSelect.value === 'za') sorted.sort((a, b) => brandName(b).localeCompare(brandName(a)));
     let anyVisible = false;
+    sorted.forEach((card) => {
+      brandAnchor.parentNode.insertBefore(card, brandAnchor);
+      const show = (!term || card.textContent.toLowerCase().includes(term)) && (!cat || card.dataset.category === cat);
+      card.style.display = show ? '' : 'none';
+      if (show) anyVisible = true;
+    });
     document.querySelectorAll('main details').forEach((section) => {
       const sectionText = section.querySelector('summary').textContent.toLowerCase();
       let sectionVisible = false;
@@ -252,7 +272,10 @@
       if (sectionVisible) anyVisible = true;
     });
     noResults.hidden = anyVisible;
-  });
+  }
+  searchInput.addEventListener('input', applyFilters);
+  categorySelect.addEventListener('change', applyFilters);
+  sortSelect.addEventListener('change', applyFilters);
 </script>
 <script data-goatcounter="https://treatyourselfdiscounts.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
