@@ -35,6 +35,8 @@
   .deal .thumb { width: 44px; height: 44px; object-fit: cover; border-radius: 12px; flex-shrink: 0; }
   .deal .name { font-weight: 700; font-size: 14px; }
   .deal .offer { font-size: 13px; color: #4a6b78; }
+  .search-row input { width: 100%; box-sizing: border-box; font-size: 15px; padding: 12px 16px; border-radius: 999px; border: 2px solid transparent; background: linear-gradient(#fff, #fff) padding-box, linear-gradient(160deg, #ffe066, #bfe6f2) border-box; outline: none; color: #23414d; }
+  #no-results { text-align: center; color: #4a6b78; margin: 8px 0; }
   @media (min-width: 760px) {
     .app { max-width: 920px; }
     .layout { display: flex; gap: 28px; align-items: flex-start; padding: 0 16px; }
@@ -88,6 +90,8 @@
     </nav>
     <div class="content">
   <main class="links">
+    <div class="search-row"><input id="deal-search" type="search" placeholder="Search deals..." aria-label="Search deals"></div>
+    <p id="no-results" hidden>No deals match your search.</p>
     <details id="brands" open><summary><span class="section-title">Pond-ering For Discounts</span><span class="chev">▾</span></summary>
     <a class="card" href="https://burbur.com/?ref=TYD15" target="_blank" rel="noopener">
       <span class="info"><span class="name">Bur Bur Hair Care</span><br><span class="offer">15% off</span><br><span class="chip">Code: TYD15</span></span>
@@ -227,6 +231,25 @@
     </div>
   </div>
 </div>
-  <script>if ("serviceWorker" in navigator) { window.addEventListener("load", function() { navigator.serviceWorker.register("sw.js"); }); }</script>
+  <script>if ("serviceWorker" in navigator) { window.addEventListener("load", function() { navigator.serviceWorker.register("sw.js"); }); }  const searchInput = document.getElementById('deal-search');
+  const noResults = document.getElementById('no-results');
+  searchInput.addEventListener('input', () => {
+    const term = searchInput.value.trim().toLowerCase();
+    let anyVisible = false;
+    document.querySelectorAll('main details').forEach((section) => {
+      const sectionText = section.querySelector('summary').textContent.toLowerCase();
+      let sectionVisible = false;
+      section.querySelectorAll('.card, .deal').forEach((item) => {
+        const show = !term || item.textContent.toLowerCase().includes(term) || sectionText.includes(term);
+        item.style.display = show ? '' : 'none';
+        if (show) sectionVisible = true;
+      });
+      section.style.display = sectionVisible ? '' : 'none';
+      if (term && sectionVisible) section.open = true;
+      if (sectionVisible) anyVisible = true;
+    });
+    noResults.hidden = anyVisible;
+  });
+</script>
 </body>
 </html>
