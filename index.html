@@ -37,10 +37,17 @@
   .deal .offer { font-size: 13px; color: #4a6b78; }
   .search-row input { width: 100%; box-sizing: border-box; font-size: 15px; padding: 12px 16px; border-radius: 999px; border: 2px solid transparent; background: linear-gradient(#fff, #fff) padding-box, linear-gradient(160deg, #ffe066, #bfe6f2) border-box; outline: none; color: #23414d; }
   #no-results { text-align: center; color: #4a6b78; margin: 8px 0; }
+  .brand-side { margin-top: 16px; }
+  .brand-side h3 { font-size: 13px; color: #4a6b78; margin: 0 0 8px; letter-spacing: .04em; text-transform: uppercase; }
+  .brand-list { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+  .brand-row { display: flex; align-items: center; gap: 8px; background: linear-gradient(#fff, #fff) padding-box, linear-gradient(160deg, #ffe066, #bfe6f2) border-box; border: 2px solid transparent; border-radius: 999px; padding: 6px 12px; text-decoration: none; color: #23414d; font-weight: 700; font-size: 13.5px; white-space: nowrap; flex-shrink: 0; }
+  .brand-row img { height: 24px; max-width: 84px; object-fit: contain; }
   @media (min-width: 760px) {
     .app { max-width: 920px; }
     .layout { display: flex; gap: 28px; align-items: flex-start; padding: 0 16px; }
     .sidebar { width: 210px; flex-shrink: 0; position: sticky; top: 16px; padding: 20px 0 0; }
+    .brand-list { flex-direction: column; overflow: visible; }
+    .brand-row { width: 100%; box-sizing: border-box; white-space: normal; }
     .side-links { flex-direction: column; overflow: visible; }
     .content { flex: 1; min-width: 0; }
     main.links { padding: 20px 0 0; }
@@ -87,6 +94,24 @@
         <a href="#shop">Shop The Pond <span>5</span></a>
         <a href="#more">More From The Pond <span>2</span></a>
       </div>
+    <div class="brand-side">
+      <h3>Shop by brand</h3>
+      <div class="brand-list">
+        <a class="brand-row" href="https://burbur.com/?ref=TYD15">Bur Bur</a>
+        <a class="brand-row" href="https://rorry.com/?ref=TYD10">Rorry</a>
+        <a class="brand-row" href="https://fanttik.com/?ref=TreatYourselfDiscounts">Fanttik</a>
+        <a class="brand-row" href="https://glocusent.com?sca_ref=12461073.J49JbT68EEitvj"><img class="brand-logo" src="https://glocusent.com/cdn/shop/files/2_fe161971-dd8b-4497-afe4-0432f24af773.png?crop=center&height=1230&v=1757663890&width=410" alt="" onerror="this.remove()">Glocusent</a>
+        <a class="brand-row" href="https://www.anrdoezrs.net/click-101896928-17024098">Soundcore</a>
+        <a class="brand-row" href="https://www.jdoqocy.com/click-101896928-17310927"><img class="brand-logo" src="https://aurzen.com/cdn/shop/files/Aurzen-Identity-Kit_Logo_Gold_120x.png?v=1723713535" alt="" onerror="this.remove()">Aurzen</a>
+        <a class="brand-row" href="https://www.lotusandluna.com/buzzlune"><img class="brand-logo" src="https://www.lotusandluna.com/cdn/shop/files/HORIZONTAL_LOGO_BLACK_1_a95458ff-b9bc-46c8-bb7b-a19cae950b9e_1600x.png?v=1727396860" alt="" onerror="this.remove()">Lotus and Luna</a>
+        <a class="brand-row" href="https://www.seeqsupply.com/LUCY45522"><img class="brand-logo" src="https://seeqsupply.com/cdn/shop/files/logo-seeq.png?v=1741233889&width=600" alt="" onerror="this.remove()">SEEQ</a>
+        <a class="brand-row" href="https://mellowsleep.com/TYD15OFF"><img class="brand-logo" src="https://mellowsleep.com/cdn/shop/files/plush_plum_86a2bfe3-29ec-4ac6-8473-655c22112954.png?v=1771248481&width=600" alt="" onerror="this.remove()">Mellow Sleep</a>
+        <a class="brand-row" href="https://euka.to/snyh5u">Ridge</a>
+        <a class="brand-row" href="https://www.im8health.com/Take10"><img class="brand-logo" src="https://im8health.com/cdn/shop/files/Header-Logo-New.svg?v=1729066833&width=600" alt="" onerror="this.remove()">IM8 Health</a>
+        <a class="brand-row" href="https://www.weekendsleepover.com/LUCY59928"><img class="brand-logo" src="https://www.weekendsleepover.com/cdn/shop/files/FULL_STACK.png?v=1770490174&width=1200" alt="" onerror="this.remove()">Weekend Sleepover</a>
+        <a class="brand-row" href="https://www.ryzesuperfoods.com/LUCY14">Ryze</a>
+      </div>
+    </div>
     </nav>
     <div class="content">
   <main class="links">
