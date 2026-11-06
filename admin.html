@@ -251,6 +251,18 @@
       </div>
     </div>
 
+    <div class="members" id="notify">
+      <h2>Send a deal alert 🔔</h2>
+      <p>Write a deal once, send it two ways. <b>Post alert</b> puts it in every member's Pond Account under Deal Alerts, so they see it next time they visit your site. <b>Email it too</b> opens your own mail app with every member hidden in BCC and the alert written out, you just tap send.</p>
+      <input type="text" id="ntitle" placeholder="Deal headline, like: Aurzen projector, half off today">
+      <input type="text" id="nmsg" placeholder="Short message: the price, the code, when it ends">
+      <input type="url" id="nlink" placeholder="Deal link (full https:// link)">
+      <button class="mbtn" id="npost">Post alert to members</button>
+      <button class="mbtn alt" id="nemail">Email it too</button>
+      <div id="nstat" style="font-size:13.5px; margin-top:8px; line-height:1.45;"></div>
+      <p style="font-size:13px; color:#5b7d89;">Posting needs you signed in above with your owner account. Real phone push notifications (the kind that buzz a phone with the site closed) are a separate add-on, ask Goose about OneSignal if you want those. Text messages need a paid texting service and members' phone numbers, which the site does not collect yet.</p>
+    </div>
+
     <div class="status">
       <h2>Admin status, Nov 6, 2026</h2>
       <ul>
@@ -539,7 +551,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
   import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-  import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  import { getFirestore, collection, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
   var firebaseConfig = {
     apiKey: "AIzaSyDoy5WjnhDlBqZaqZDUFkX6XodiXvQmr7I",
     authDomain: "treatyourselfdiscounts-881a9.firebaseapp.com",
@@ -553,10 +565,12 @@
   var db = getFirestore();
   function $(id) { return document.getElementById(id); }
   function showErr(msg) { var e = $("owner-err"); e.textContent = msg; e.style.display = "block"; }
+  var memberEmails = [];
   function loadMembers() {
     getDocs(collection(db, "users")).then(function (snap) {
       var rows = [];
       snap.forEach(function (d) { var v = d.data() || {}; rows.push({ email: v.email || "", joined: v.joinedAt, saves: v.savedRecipes || [] }); });
+      memberEmails = rows.map(function (r) { return r.email; }).filter(function (e) { return !!e; });
       rows.sort(function (a, b) { return (a.email || "zzz").localeCompare(b.email || "zzz"); });
       $("owner-count").textContent = rows.length + (rows.length === 1 ? " member" : " members") + " in the Pond";
       if (!rows.length) { $("owner-list").innerHTML = '<p style="color:#5b7d89;">Nobody has signed up yet. When the first member joins, they will appear here.</p>'; return; }
@@ -582,6 +596,27 @@
     signInWithEmailAndPassword(auth, email, pw).catch(function () { showErr("That email and password do not match a Pond account. Check them and try again."); });
   });
   $("owner-signout").addEventListener("click", function () { signOut(auth); });
+  function nstat(msg, ok) { var s = $("nstat"); s.textContent = msg; s.style.color = ok ? "#1e5c33" : "#8c2b2b"; }
+  $("npost").addEventListener("click", function () {
+    var title = $("ntitle").value.trim(), msg = $("nmsg").value.trim(), link = $("nlink").value.trim();
+    if (!title || !msg) { nstat("Write a headline and a short message first."); return; }
+    if (link && link.indexOf("https://") !== 0) { nstat("The deal link needs to be a full https:// link, or leave it blank."); return; }
+    if (!auth.currentUser) { nstat("Sign in above with your Pond account first, then post."); return; }
+    addDoc(collection(db, "announcements"), { title: title, message: msg, link: link, from: "Lucy", createdAt: serverTimestamp() })
+      .then(function () { nstat("Posted! Members will see this alert in their Pond Account under Deal Alerts.", true); })
+      .catch(function (err) {
+        if (err && err.code === "permission-denied") nstat("The database has not flipped your owner switch yet. Tell Goose once your Pond account is made and this will light up.");
+        else nstat("Posting hiccuped. Try again in a moment.");
+      });
+  });
+  $("nemail").addEventListener("click", function () {
+    var title = $("ntitle").value.trim(), msg = $("nmsg").value.trim(), link = $("nlink").value.trim();
+    if (!title || !msg) { nstat("Write a headline and a short message first, then tap Email it too."); return; }
+    if (!memberEmails.length) { nstat("No member emails loaded yet. Sign in above so your member list loads, then tap Email it too."); return; }
+    var body = msg + (link ? "\n\nSee the deal: " + link : "") + "\n\nFrom Lucy at TreatYourselfDiscounts, the Pond. Deals can end or sell out anytime.";
+    window.location.href = "mailto:?bcc=" + encodeURIComponent(memberEmails.join(",")) + "&subject=" + encodeURIComponent("🔔 Pond deal alert: " + title) + "&body=" + encodeURIComponent(body);
+    nstat("Your mail app should open with every member in BCC, so members never see each other's emails. Just tap send there.", true);
+  });
   $("owner-refresh").addEventListener("click", function () { loadMembers(); });
   onAuthStateChanged(auth, function (user) {
     $("owner-login").style.display = user ? "none" : "block";

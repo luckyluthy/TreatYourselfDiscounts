@@ -30,6 +30,10 @@
   .status.err { background: #fdecec; color: #8c2b2b; border: 1.5px solid #f0b4b4; }
   .status.ok { background: #e9f9ee; color: #1e5c33; border: 1.5px solid #a8dcb8; }
   .savedlist a { display: inline-block; background: #eaf7fb; border-radius: 999px; padding: 6px 12px; margin: 0 6px 6px 0; color: #1f5f74; font-weight: 700; font-size: 13.5px; text-decoration: none; }
+  .alertrow { background: #fffbe8; border: 1.5px solid #f0df9a; border-radius: 12px; padding: 10px 12px; margin: 0 0 8px; font-size: 14px; line-height: 1.45; }
+  .alertrow b { color: #1f5f74; display: block; font-size: 14.5px; }
+  .alertrow .when { color: #8a7a2e; font-size: 12px; font-weight: 700; }
+  .alertrow a { color: #1f5f74; font-weight: 800; }
   footer { margin-top: 26px; text-align: center; }
   .disc { font-size: 12px; color: #5b7d89; line-height: 1.5; max-width: 480px; margin: 10px auto 0; }
   @media (prefers-reduced-motion: reduce) { .btn { transition: none; } }
@@ -53,6 +57,7 @@
     <input id="password" type="password" autocomplete="current-password" placeholder="At least 6 characters">
     <button class="btn btn-main" id="login">Log in</button>
     <button class="btn btn-alt" id="signup">Create my account</button>
+    <button class="btn btn-alt" id="google" style="background:#fff; border:2px solid #bcd9e4; color:#1f5f74;">Continue with Google</button>
     <button class="btn btn-ghost" id="forgot">Forgot your password?</button>
     <div class="status" id="status"></div>
   </div>
@@ -62,6 +67,8 @@
     <p>You are logged in as <b id="who"></b>.</p>
     <h3 style="color:#1f5f74; font-size:15px; margin:14px 0 6px;">Your saved recipes, synced to your account</h3>
     <div class="savedlist" id="savedlist"><p style="color:#5b7d89;">Nothing saved yet. Head to <a href="recipes.html" style="color:#1f5f74; font-weight:700;">TYD's Kitchen</a> and tap Save recipe on a favorite.</p></div>
+    <h3 style="color:#1f5f74; font-size:15px; margin:16px 0 6px;">Deal alerts from Lucy 🔔</h3>
+    <div id="alertlist"><p style="color:#5b7d89; font-size:14px;">No deal alerts yet. When Lucy posts a hot deal for members, it lands right here.</p></div>
     <button class="btn btn-main" id="logout">Log out</button>
   </div>
 
@@ -72,8 +79,8 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-  import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { getFirestore, doc, getDoc, setDoc, serverTimestamp, collection, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
   var firebaseConfig = {
     apiKey: "AIzaSyDoy5WjnhDlBqZaqZDUFkX6XodiXvQmr7I",
@@ -102,6 +109,8 @@
     if (c === "auth/invalid-email") return "That email address does not look complete. Check it and try again.";
     if (c === "auth/too-many-requests") return "Too many tries in a row. Please wait a little and try again.";
     if (c === "auth/network-request-failed") return "The connection hiccuped. Check your internet and try again.";
+    if (c === "auth/popup-closed-by-user" || c === "auth/cancelled-popup-request") return "The Google window closed before finishing. Tap Continue with Google to try again.";
+    if (c === "auth/operation-not-allowed") return "Google sign in is still being switched on. Give it a little while, or use your email and password below.";
     return "Something did not work. Please try again in a moment.";
   }
   function creds() { return { email: $("email").value.trim(), pw: $("password").value }; }
@@ -131,6 +140,38 @@
       .catch(function (e) { showStatus(friendly(e)); });
   });
   $("logout").addEventListener("click", function () { signOut(auth); });
+  $("google").addEventListener("click", function () {
+    signInWithPopup(auth, new GoogleAuthProvider())
+      .then(function (cred) {
+        var ref = doc(db, "users", cred.user.uid);
+        getDoc(ref).then(function (snap) {
+          var data = { email: cred.user.email };
+          if (!snap.exists() || !(snap.data() && snap.data().joinedAt)) data.joinedAt = serverTimestamp();
+          setDoc(ref, data, { merge: true }).catch(function () {});
+        }).catch(function () {});
+        showStatus("Logged in with Google. Welcome to the Pond!", true);
+      })
+      .catch(function (e) { showStatus(friendly(e)); });
+  });
+
+  function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+  function loadAlerts() {
+    var q = query(collection(db, "announcements"), orderBy("createdAt", "desc"), limit(10));
+    getDocs(q).then(function (snap) {
+      if (snap.empty) return;
+      var html = "";
+      snap.forEach(function (d) {
+        var v = d.data() || {};
+        var when = "";
+        try { if (v.createdAt && v.createdAt.toDate) when = v.createdAt.toDate().toLocaleDateString(); } catch (e) {}
+        html += '<div class="alertrow"><b>' + esc(v.title || "Deal alert") + '</b>' + esc(v.message || "");
+        if (v.link) html += '<br><a href="' + esc(v.link) + '" target="_blank" rel="noopener">See the deal &#8250;</a>';
+        if (when) html += '<div class="when">' + when + '</div>';
+        html += '</div>';
+      });
+      $("alertlist").innerHTML = html;
+    }).catch(function () {});
+  }
 
   function renderSavedList(saved) {
     if (!saved.length) return;
@@ -157,6 +198,7 @@
       $("account-card").style.display = "block";
       $("who").textContent = user.email;
       renderSaved(user);
+      loadAlerts();
     } else {
       $("auth-card").style.display = "block";
       $("account-card").style.display = "none";
