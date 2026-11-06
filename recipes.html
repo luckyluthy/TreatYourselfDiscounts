@@ -5671,7 +5671,98 @@ hot sauce</p>
   function openPlanPanel() { renderPlan(); ppanel.classList.add("show"); }
   ppanel.addEventListener("click", function (e) { if (e.target === ppanel) ppanel.classList.remove("show"); });
   ppanel.querySelector("[data-pclose]").addEventListener("click", function () { ppanel.classList.remove("show"); });
+  window.TYDRerender = function (card) { renderCard(card); };
   updatePlanCount();
+})();
+
+</script>
+<script>
+(function () {
+  // Korean translation for recipe cards, via the free MyMemory API.
+  // Translates one recipe at a time, on tap, and caches it on the device.
+  var CACHE_KEY = "tydKoCache";
+  function loadCache() { try { return JSON.parse(localStorage.getItem(CACHE_KEY)) || {}; } catch (e) { return {}; } }
+  function saveCache(c) { try { localStorage.setItem(CACHE_KEY, JSON.stringify(c)); } catch (e) {} }
+  function chunks(text) {
+    var out = [];
+    var parts = String(text).split(/(?<=[.!?])\s+/);
+    var cur = "";
+    parts.forEach(function (p) {
+      if ((cur + " " + p).length > 420 && cur) { out.push(cur); cur = p; }
+      else cur = cur ? cur + " " + p : p;
+    });
+    if (cur) out.push(cur);
+    return out.length ? out : [String(text)];
+  }
+  async function translateText(text) {
+    if (!text || !text.trim()) return text;
+    var done = [];
+    var cs = chunks(text);
+    for (var i = 0; i < cs.length; i++) {
+      var url = "https://api.mymemory.translated.net/get?q=" + encodeURIComponent(cs[i]) + "&langpair=en|ko";
+      var res = await fetch(url);
+      if (!res.ok) throw new Error("translate http " + res.status);
+      var data = await res.json();
+      var t = data && data.responseData && data.responseData.translatedText;
+      if (!t) throw new Error("translate empty");
+      done.push(t);
+    }
+    return done.join(" ");
+  }
+  document.querySelectorAll(".recipe-card").forEach(function (card) {
+    var bar = card.querySelector(".cookbar");
+    if (!bar) return;
+    var btn = document.createElement("button");
+    btn.className = "cookbtn";
+    btn.textContent = "🇰🇷 Korean";
+    bar.appendChild(btn);
+    var on = false, busy = false, ko = null;
+    function parts() {
+      var title = card.querySelector("h2");
+      var desc = null;
+      card.querySelectorAll("p").forEach(function (p) { if (!desc && p.textContent.trim() && !p.classList.contains("meta") && !p.classList.contains("note")) desc = p; });
+      var uls = card.querySelectorAll("ul");
+      var ings = uls.length ? Array.prototype.slice.call(uls[0].querySelectorAll("li")) : [];
+      var dirs = Array.prototype.slice.call(card.querySelectorAll("ol li"));
+      return { title: title, desc: desc, ings: ings, dirs: dirs };
+    }
+    btn.addEventListener("click", async function () {
+      if (busy) return;
+      var P = parts();
+      if (on) {
+        // back to English: re-render from the cook tools' originals if present
+        on = false; btn.textContent = "🇰🇷 Korean"; btn.classList.remove("added");
+        if (window.TYDRerender) window.TYDRerender(card);
+        else location.reload();
+        return;
+      }
+      busy = true; btn.textContent = "Translating…";
+      try {
+        if (!ko) {
+          var cache = loadCache();
+          if (cache[card.id]) { ko = cache[card.id]; }
+          else {
+            ko = { title: await translateText(P.title.textContent) };
+            if (P.desc) ko.desc = await translateText(P.desc.textContent);
+            ko.ings = [];
+            for (var i = 0; i < P.ings.length; i++) ko.ings.push(await translateText(P.ings[i].textContent));
+            ko.dirs = [];
+            for (var j = 0; j < P.dirs.length; j++) ko.dirs.push(await translateText(P.dirs[j].textContent));
+            cache[card.id] = ko; saveCache(cache);
+          }
+        }
+        P.title.textContent = ko.title;
+        if (P.desc && ko.desc) P.desc.textContent = ko.desc;
+        P.ings.forEach(function (li, i) { if (ko.ings[i]) li.textContent = ko.ings[i]; });
+        P.dirs.forEach(function (li, i) { if (ko.dirs[i]) li.textContent = ko.dirs[i]; });
+        on = true; btn.textContent = "🇺🇸 English"; btn.classList.add("added");
+      } catch (e) {
+        btn.textContent = "🇰🇷 Korean (try again)";
+        alert("The free translation service is busy right now. Give it a moment and tap Korean again.");
+      }
+      busy = false;
+    });
+  });
 })();
 
 </script>
