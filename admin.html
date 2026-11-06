@@ -64,7 +64,69 @@
   footer { text-align: center; font-size: 12.5px; color: #7a5c3e; padding: 26px 12px 0; }
   @keyframes pop { 0% { transform: scale(.96); } 60% { transform: scale(1.02); } 100% { transform: scale(1); } }
   .pop { animation: pop .3s ease; }
-  @media (prefers-reduced-motion: reduce) { .book, .notebook { transition: none; } .pop, #gate.shake { animation: none; } }
+  /* ---------- open book / inside preview ---------- */
+  .stage-btn { border: none; cursor: pointer; font-family: inherit; font-weight: 800; font-size: 14.5px; border-radius: 999px; padding: 11px 18px; background: #b3543f; color: #fff; box-shadow: 0 4px 12px rgba(35,65,77,.18); transition: transform .2s ease, box-shadow .2s ease; margin-bottom: 14px; }
+  .stage-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(35,65,77,.22); }
+  .notebook-wrap { animation: floaty 6s ease-in-out infinite; }
+  @keyframes floaty { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+  .nb-band { position: absolute; right: 14px; top: 0; bottom: 0; width: 9px; border-radius: 99px; background: #f2b705; box-shadow: inset 0 0 3px rgba(0,0,0,.25); }
+  .sparkle { position: absolute; color: #f0c93e; font-size: 15px; pointer-events: none; animation: twinkle 2.4s ease-in-out infinite; z-index: 2; }
+  @keyframes twinkle { 0%,100% { opacity: .25; transform: scale(.8) rotate(0deg); } 50% { opacity: 1; transform: scale(1.15) rotate(20deg); } }
+  .spread-wrap { position: relative; width: 100%; max-width: 540px; margin: 0 auto; padding-right: 16px; }
+  .spread { display: flex; position: relative; width: 100%; background: #fff8ea; border-radius: 14px; box-shadow: 0 12px 26px rgba(35,65,77,.22); }
+  .spread.enter { animation: spreadIn .5s ease; }
+  @keyframes spreadIn { 0% { opacity: 0; transform: scale(.94) rotate(-1deg); } 100% { opacity: 1; transform: scale(1) rotate(0deg); } }
+  .page-left, .page-right { flex: 1 1 0; min-width: 0; padding: 12px; position: relative; }
+  .page-left { border: 2px solid #e8d5b5; border-right: none; border-radius: 14px 4px 4px 14px; overflow: hidden; }
+  .page-right { border: 2px solid #e8d5b5; border-left: none; border-radius: 4px 14px 14px 4px; background: #fffdf6; }
+  .spine { width: 10px; flex-shrink: 0; background: linear-gradient(90deg, #d9c39a, #f6ead0, #d9c39a); }
+  .ptitle { font-weight: 800; color: #5b3a1e; font-size: 13.5px; margin: 0 0 8px; text-align: left; }
+  .pocket { position: relative; height: 64px; border: 2px dashed rgba(91,58,30,.45); border-radius: 10px; background: rgba(255,255,255,.35); display: flex; align-items: flex-end; justify-content: center; padding-bottom: 6px; font-size: 11px; font-weight: 700; color: rgba(91,58,30,.75); transform: rotate(-1.5deg); }
+  .eloops { position: absolute; right: 8px; top: 12px; bottom: 12px; display: flex; flex-direction: column; justify-content: space-evenly; }
+  .eloop { width: 7px; height: 34px; border-radius: 99px; background: #f2b705; box-shadow: inset 0 0 3px rgba(0,0,0,.25); }
+  .stack { margin-top: 10px; display: flex; flex-direction: column; gap: 5px; text-align: left; }
+  .stackrow { border: 1px solid rgba(91,58,30,.25); background: rgba(255,255,255,.65); color: #5b3a1e; border-radius: 8px; padding: 5px 7px; font-size: 11.5px; font-weight: 700; cursor: pointer; font-family: inherit; text-align: left; transition: transform .15s ease, background .15s ease; }
+  .stackrow:hover { transform: translateX(2px); }
+  .stackrow.on { background: #5b3a1e; color: #ffe9c4; }
+  .stack-empty { font-size: 12px; color: rgba(91,58,30,.8); text-align: left; }
+  #page-content { height: 100%; display: flex; flex-direction: column; text-align: left; }
+  .paper { flex: 1; min-height: 140px; border-radius: 8px; border: 1px solid #e3d3ae; padding: 8px; position: relative; overflow: hidden; background-color: #fffdf6; }
+  .paper.lined { background-image: repeating-linear-gradient(#fffdf6 0 21px, #c3d5dd 21px 22px); }
+  .paper.lined::before { content: ""; position: absolute; top: 0; bottom: 0; left: 22px; width: 2px; background: rgba(217,83,79,.35); }
+  .paper.dotgrid { background-image: radial-gradient(#b9cdd6 1.6px, transparent 1.8px); background-size: 16px 16px; }
+  .paper.blank::after { content: ""; position: absolute; inset: 7px; border: 2px dashed #e8d5b5; border-radius: 6px; pointer-events: none; }
+  .plan-h { font-weight: 800; color: #5b3a1e; font-size: 12.5px; margin-bottom: 6px; }
+  .plan-r { display: flex; align-items: center; gap: 7px; margin-bottom: 9px; }
+  .plan-r .box { width: 12px; height: 12px; border: 2px solid #c9a86a; border-radius: 3px; flex-shrink: 0; background: #fff; }
+  .plan-r .line { flex: 1; height: 2px; background: #d8e4e9; border-radius: 2px; }
+  .pfoot { font-size: 11px; color: #7a5c3e; margin-top: 6px; }
+  .pockets { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+  .pocket-clear { border: 2px solid rgba(127,179,200,.55); background: linear-gradient(135deg, rgba(191,230,242,.5), rgba(255,255,255,.25)); border-radius: 10px; padding: 8px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; min-height: 52px; }
+  .coupon { border: 2px dashed #b3543f; color: #b3543f; background: #fff8ea; font-size: 11px; font-weight: 800; border-radius: 6px; padding: 5px 8px; transform: rotate(-2deg); }
+  .coupon.alt { transform: rotate(1.5deg); border-color: #1f8a8a; color: #1f8a8a; }
+  .card-chip { background: linear-gradient(120deg, #5b84ae, #7fb3c8); color: #fff; font-size: 11px; font-weight: 700; border-radius: 6px; padding: 7px 9px; box-shadow: inset 0 -8px 0 rgba(0,0,0,.12); }
+  .zip { position: relative; border: 2px solid #c9a86a; background: #fdf1d7; border-radius: 10px; padding: 12px 8px 8px; font-size: 11.5px; font-weight: 800; color: #5b3a1e; text-align: center; }
+  .zip::before { content: ""; position: absolute; top: 4px; left: 8px; right: 8px; height: 5px; border-radius: 3px; background: repeating-linear-gradient(90deg, #8a8d91 0 5px, #d8d8d8 5px 10px); }
+  .zip-pull { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; box-shadow: inset 0 0 3px rgba(0,0,0,.3); }
+  .tabs { position: absolute; right: 0; top: 16px; display: flex; flex-direction: column; gap: 6px; z-index: 3; }
+  .tab { border: 2px solid #c9a86a; background: #fffdf6; color: #5b3a1e; border-radius: 0 10px 10px 0; font-size: 11px; font-weight: 800; padding: 6px 6px; cursor: pointer; font-family: inherit; max-width: 62px; text-align: left; transition: transform .15s ease, background .15s ease; }
+  .tab:hover { transform: translateX(2px); }
+  .tab.on { background: #5b3a1e; color: #ffe9c4; border-color: #5b3a1e; }
+  .flip { position: absolute; inset: 0; border-radius: 4px 14px 14px 4px; background: #fffdf6; transform-origin: left center; opacity: 0; pointer-events: none; z-index: 2; overflow: hidden; padding: 12px; }
+  .flip.go { animation: flipPage .48s ease; }
+  @keyframes flipPage { 0% { opacity: 1; transform: rotateY(0deg); } 45% { opacity: 1; transform: rotateY(-72deg); } 100% { opacity: 0; transform: rotateY(-150deg); } }
+  .flipnav { display: flex; gap: 8px; justify-content: center; align-items: center; margin-top: 12px; }
+  .mini { border: none; background: #f3e9d4; border-radius: 8px; padding: 5px 9px; font-weight: 800; cursor: pointer; color: #5b3a1e; font-family: inherit; font-size: 12.5px; transition: transform .15s ease; }
+  .mini:hover { transform: translateY(-1px); }
+  .mini:disabled { opacity: .4; cursor: default; transform: none; }
+  .mini.nav { padding: 8px 14px; border-radius: 999px; font-size: 13.5px; }
+  .swatches { display: flex; flex-wrap: wrap; gap: 9px; align-items: center; }
+  .sw { width: 27px; height: 27px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 2px #c9a86a; cursor: pointer; padding: 0; transition: transform .15s ease, box-shadow .15s ease; }
+  .sw:hover { transform: scale(1.1); }
+  .sw.on { box-shadow: 0 0 0 3px #5b3a1e; transform: scale(1.1); }
+  .order-row { display: flex; align-items: center; gap: 6px; background: #fff; border: 1px solid #e8d5b5; border-radius: 10px; padding: 6px 8px; margin-bottom: 6px; font-size: 13px; }
+  .order-row .nm { flex: 1; min-width: 0; font-weight: 700; color: #5b3a1e; }
+  @media (prefers-reduced-motion: reduce) { .book, .notebook, .tab, .sw, .chip, .stackrow, .stage-btn, .mini { transition: none; } .pop, #gate.shake, .notebook-wrap, .sparkle, .spread.enter, .flip.go { animation: none; } }
 </style>
 </head>
 <body>
@@ -94,16 +156,47 @@
         <div class="sizes" id="sizes"></div>
         <h2 style="margin-top:20px;">Inserts (tap to add or remove)</h2>
         <div class="inserts" id="inserts"></div>
+        <h2 style="margin-top:20px;">Inside page style</h2>
+        <div class="sizes" id="styles"></div>
+        <h2 style="margin-top:20px;">Elastic color</h2>
+        <div class="swatches" id="elastics"></div>
+        <h2 style="margin-top:20px;">Your insert order</h2>
+        <div id="order-list"><p class="sub" style="margin:0;">No inserts yet. Tap inserts above and they will line up here.</p></div>
       </section>
 
       <section class="stage">
-        <div class="notebook-wrap">
+        <button class="stage-btn" id="toggle-open">Open my Covey 📖</button>
+        <div class="notebook-wrap" id="closed-view">
+          <span class="sparkle" style="left:-8px; top:6px;" aria-hidden="true">✦</span>
+          <span class="sparkle" style="right:-4px; top:44px; animation-delay:1.2s;" aria-hidden="true">✦</span>
           <div class="back-peek" id="back-peek"></div>
           <div class="notebook" id="notebook" style="width:230px; height:300px;">
             <span class="covey">C O V E Y</span>
             <span class="motif" id="nb-motif">📖</span>
             <span class="t" id="nb-title">Made of stories.</span>
             <span class="a" id="nb-author">Tap a cover to begin</span>
+            <span class="nb-band" id="nb-band"></span>
+          </div>
+        </div>
+        <div class="spread-wrap" id="open-view" style="display:none;">
+          <div class="spread" id="spread">
+            <div class="page-left" id="page-left">
+              <p class="ptitle">Inside front cover</p>
+              <div class="pocket"><span>Front pocket</span></div>
+              <div class="eloops"><span class="eloop"></span><span class="eloop"></span><span class="eloop"></span></div>
+              <div class="stack" id="stack"></div>
+            </div>
+            <div class="spine"></div>
+            <div class="page-right" id="page-right">
+              <div id="page-content"></div>
+              <div class="flip" id="flip"></div>
+            </div>
+            <div class="tabs" id="tabs"></div>
+          </div>
+          <div class="flipnav">
+            <button class="mini nav" id="prev">‹ Prev</button>
+            <span id="flip-count" style="font-size:13px; color:#7a5c3e; font-weight:700;">No inserts yet</span>
+            <button class="mini nav" id="next">Next ›</button>
           </div>
         </div>
         <p class="sub" id="size-label">Size: A5</p>
@@ -116,6 +209,8 @@
           <div><b>Back:</b> <span id="sum-back">not picked</span></div>
           <div><b>Size:</b> <span id="sum-size">A5</span></div>
           <div><b>Inserts:</b> <span id="sum-inserts">none</span></div>
+          <div><b>Page style:</b> <span id="sum-style">Lined</span></div>
+          <div><b>Elastic:</b> <span id="sum-elastic">Duck Yellow</span></div>
         </div>
         <button class="btn" id="reset">Start over</button>
         <button class="btn" id="lock">Lock this page</button>
@@ -185,8 +280,24 @@
     { t: "The Jungle Book", a: "Rudyard Kipling", c: "#8f451d", m: "🐾" }
   ];
   var SIZES = [ { n: "A5", w: 230, h: 300 }, { n: "Regular", w: 205, h: 315 }, { n: "Personal", w: 180, h: 285 }, { n: "Passport", w: 160, h: 235 } ];
-  var INSERTS = ["A5 Refill Booklet", "Regular Refill Booklet", "Passport Refill Booklet", "Personal Refill Booklet", "Coupon Keeper"];
+  var INSERTS = [
+    { n: "A5 Refill Booklet", icon: "📓", kind: "paper" },
+    { n: "Regular Refill Booklet", icon: "📔", kind: "paper" },
+    { n: "Passport Refill Booklet", icon: "🧳", kind: "paper" },
+    { n: "Personal Refill Booklet", icon: "🗓️", kind: "paper" },
+    { n: "Coupon Keeper", icon: "🎟️", kind: "coupon" }
+  ];
+  var STYLES = ["Lined", "Dot grid", "Blank", "Planner"];
+  var ELASTICS = [
+    { n: "Duck Yellow", c: "#f2b705" },
+    { n: "Pond Teal", c: "#1f8a8a" },
+    { n: "Blush Pink", c: "#f2a7bb" },
+    { n: "Lavender", c: "#9b8ad4" },
+    { n: "Cocoa", c: "#8a5a3b" }
+  ];
   var pickedCovers = [], pickedInserts = [], size = "A5";
+  var pageStyle = "Lined", elasticName = "Duck Yellow", elasticColor = "#f2b705";
+  var isOpen = false, currentPos = 0, flipping = false;
 
   var coversEl = document.getElementById('covers');
   COVERS.forEach(function (cv, i) {
@@ -214,17 +325,137 @@
     sizesEl.appendChild(b);
   });
   var insertsEl = document.getElementById('inserts');
-  INSERTS.forEach(function (name, i) {
+  INSERTS.forEach(function (ins, i) {
     var b = document.createElement('button');
-    b.className = 'chip'; b.id = 'insert-' + i; b.textContent = name;
+    b.className = 'chip'; b.id = 'insert-' + i; b.textContent = ins.icon + ' ' + ins.n;
     b.addEventListener('click', function () {
       var k = pickedInserts.indexOf(i);
-      if (k === -1) { pickedInserts.push(i); b.classList.add('on'); }
-      else { pickedInserts.splice(k, 1); b.classList.remove('on'); }
+      if (k === -1) { pickedInserts.push(i); b.classList.add('on'); currentPos = pickedInserts.length - 1; }
+      else { pickedInserts.splice(k, 1); b.classList.remove('on'); if (currentPos > k) currentPos--; if (currentPos >= pickedInserts.length) currentPos = Math.max(0, pickedInserts.length - 1); }
       render();
     });
     insertsEl.appendChild(b);
   });
+  var stylesEl = document.getElementById('styles');
+  STYLES.forEach(function (st) {
+    var b = document.createElement('button');
+    b.className = 'chip' + (st === pageStyle ? ' on' : ''); b.textContent = st; b.id = 'style-' + st.replace(' ', '-');
+    b.addEventListener('click', function () {
+      pageStyle = st;
+      STYLES.forEach(function (s2) { document.getElementById('style-' + s2.replace(' ', '-')).classList.toggle('on', s2 === pageStyle); });
+      render();
+    });
+    stylesEl.appendChild(b);
+  });
+  var elasticsEl = document.getElementById('elastics');
+  ELASTICS.forEach(function (el) {
+    var b = document.createElement('button');
+    b.className = 'sw' + (el.n === elasticName ? ' on' : ''); b.style.background = el.c; b.title = el.n; b.id = 'elastic-' + el.n.replace(' ', '-');
+    b.setAttribute('aria-label', 'Elastic color: ' + el.n);
+    b.addEventListener('click', function () {
+      elasticName = el.n; elasticColor = el.c;
+      ELASTICS.forEach(function (e2) { document.getElementById('elastic-' + e2.n.replace(' ', '-')).classList.toggle('on', e2.n === elasticName); });
+      render();
+    });
+    elasticsEl.appendChild(b);
+  });
+  function sizeObj() { for (var k = 0; k < SIZES.length; k++) if (SIZES[k].n === size) return SIZES[k]; return SIZES[0]; }
+  function visual(i) {
+    var ins = INSERTS[i];
+    if (ins.kind === 'coupon') {
+      return '<p class="ptitle">🎟️ Coupon Keeper</p>' +
+        '<div class="pockets">' +
+        '<div class="pocket-clear"><span class="coupon">Coupon</span><span class="coupon alt">Coupon</span></div>' +
+        '<div class="pocket-clear"><span class="card-chip">Gift card</span><span class="card-chip">Loyalty card</span></div>' +
+        '<div class="zip"><span class="zip-pull" style="background:' + elasticColor + '"></span>Zip pouch</div>' +
+        '</div>' +
+        '<p class="pfoot">Clear pockets for coupons and cards, plus a zip pouch to keep the little things safe.</p>';
+    }
+    var cls = pageStyle.toLowerCase().replace(' ', '');
+    var body = '';
+    if (pageStyle === 'Planner') {
+      body = '<div class="plan-h">This week</div>';
+      for (var r = 0; r < 5; r++) body += '<div class="plan-r"><span class="box"></span><span class="line"></span></div>';
+    }
+    return '<p class="ptitle">' + ins.icon + ' ' + ins.n + '</p>' +
+      '<div class="paper ' + cls + '">' + body + '</div>' +
+      '<p class="pfoot">' + pageStyle + ' pages · slides in on an elastic</p>';
+  }
+  function renderOpen() {
+    var sz = sizeObj();
+    var spread = document.getElementById('spread');
+    spread.style.aspectRatio = (sz.w * 2) + ' / ' + sz.h;
+    var front = pickedCovers[0];
+    document.getElementById('page-left').style.background = 'linear-gradient(rgba(255,248,234,0.88), rgba(255,248,234,0.88)), ' + (front !== undefined ? COVERS[front].c : '#a7adb3');
+    var loops = document.querySelectorAll('.eloop');
+    for (var li = 0; li < loops.length; li++) loops[li].style.background = elasticColor;
+    var stack = document.getElementById('stack');
+    stack.innerHTML = '';
+    if (!pickedInserts.length) {
+      stack.innerHTML = '<span class="stack-empty">No inserts tucked in yet.</span>';
+    } else {
+      pickedInserts.forEach(function (idx, pos) {
+        var sb = document.createElement('button');
+        sb.className = 'stackrow' + (pos === currentPos ? ' on' : '');
+        sb.textContent = INSERTS[idx].icon + ' ' + INSERTS[idx].n;
+        sb.addEventListener('click', function () { flipTo(pos); });
+        stack.appendChild(sb);
+      });
+    }
+    var content = document.getElementById('page-content');
+    if (!pickedInserts.length) {
+      content.innerHTML = '<p class="ptitle">📖 Nothing inside yet</p><div class="paper blank"></div><p class="pfoot">No inserts yet. Tap the inserts on the left to tuck some in, then flip through them here.</p>';
+    } else {
+      content.innerHTML = visual(pickedInserts[currentPos]);
+    }
+    var tabs = document.getElementById('tabs');
+    tabs.innerHTML = '';
+    pickedInserts.forEach(function (idx, pos) {
+      var tb = document.createElement('button');
+      tb.className = 'tab' + (pos === currentPos ? ' on' : '');
+      tb.textContent = INSERTS[idx].icon + ' ' + INSERTS[idx].n.split(' ')[0];
+      tb.addEventListener('click', function () { flipTo(pos); });
+      tabs.appendChild(tb);
+    });
+    document.getElementById('flip-count').textContent = pickedInserts.length ? 'Insert ' + (currentPos + 1) + ' of ' + pickedInserts.length : 'No inserts yet';
+    document.getElementById('prev').disabled = !pickedInserts.length || currentPos <= 0;
+    document.getElementById('next').disabled = !pickedInserts.length || currentPos >= pickedInserts.length - 1;
+  }
+  function flipTo(pos) {
+    if (!isOpen || flipping || pos === currentPos || pos < 0 || pos >= pickedInserts.length) { if (!isOpen) { currentPos = pos; renderOpen(); } return; }
+    flipping = true;
+    var flip = document.getElementById('flip');
+    flip.innerHTML = document.getElementById('page-content').innerHTML;
+    flip.classList.remove('go'); void flip.offsetWidth; flip.classList.add('go');
+    setTimeout(function () { currentPos = pos; renderOpen(); }, 230);
+    setTimeout(function () { flip.classList.remove('go'); flip.innerHTML = ''; flipping = false; }, 500);
+  }
+  function renderOrder() {
+    var el = document.getElementById('order-list');
+    el.innerHTML = '';
+    if (!pickedInserts.length) {
+      el.innerHTML = '<p class="sub" style="margin:0;">No inserts yet. Tap inserts above and they will line up here.</p>';
+      return;
+    }
+    pickedInserts.forEach(function (idx, pos) {
+      var row = document.createElement('div');
+      row.className = 'order-row';
+      var nm = document.createElement('span');
+      nm.className = 'nm'; nm.textContent = INSERTS[idx].icon + ' ' + INSERTS[idx].n;
+      row.appendChild(nm);
+      [['↑', 'Move up', function () { if (pos > 0) { var t = pickedInserts[pos - 1]; pickedInserts[pos - 1] = pickedInserts[pos]; pickedInserts[pos] = t; currentPos = pos - 1; render(); } }],
+       ['↓', 'Move down', function () { if (pos < pickedInserts.length - 1) { var t = pickedInserts[pos + 1]; pickedInserts[pos + 1] = pickedInserts[pos]; pickedInserts[pos] = t; currentPos = pos + 1; render(); } }],
+       ['✕', 'Remove', function () { pickedInserts.splice(pos, 1); document.getElementById('insert-' + idx).classList.remove('on'); if (currentPos >= pickedInserts.length) currentPos = Math.max(0, pickedInserts.length - 1); render(); }]]
+      .forEach(function (spec) {
+        var btn = document.createElement('button');
+        btn.className = 'mini'; btn.textContent = spec[0]; btn.title = spec[1];
+        btn.setAttribute('aria-label', spec[1] + ': ' + INSERTS[idx].n);
+        btn.addEventListener('click', spec[2]);
+        row.appendChild(btn);
+      });
+      el.appendChild(row);
+    });
+  }
   function render() {
     var nb = document.getElementById('notebook');
     var front = pickedCovers[0], back = pickedCovers[1];
@@ -244,19 +475,37 @@
     if (back !== undefined) {
       peek.style.display = 'flex'; peek.style.background = COVERS[back].c; peek.textContent = COVERS[back].m;
     } else peek.style.display = 'none';
+    document.getElementById('nb-band').style.background = elasticColor;
     nb.classList.remove('pop'); void nb.offsetWidth; nb.classList.add('pop');
     document.getElementById('sum-front').textContent = front !== undefined ? COVERS[front].t : 'not picked';
     document.getElementById('sum-back').textContent = back !== undefined ? COVERS[back].t : 'not picked';
     document.getElementById('sum-size').textContent = size;
     document.getElementById('size-label').textContent = 'Size: ' + size;
-    document.getElementById('sum-inserts').textContent = pickedInserts.length ? pickedInserts.map(function (i) { return INSERTS[i]; }).join(', ') : 'none';
+    document.getElementById('sum-inserts').textContent = pickedInserts.length ? pickedInserts.map(function (i) { return INSERTS[i].n; }).join(', ') : 'none';
+    document.getElementById('sum-style').textContent = pageStyle;
+    document.getElementById('sum-elastic').textContent = elasticName;
+    renderOpen();
+    renderOrder();
   }
   document.getElementById('reset').addEventListener('click', function () {
-    pickedCovers = []; pickedInserts = [];
+    pickedCovers = []; pickedInserts = []; currentPos = 0;
     COVERS.forEach(function (_, i) { document.getElementById('cover-' + i).classList.remove('used'); });
     INSERTS.forEach(function (_, i) { document.getElementById('insert-' + i).classList.remove('on'); });
     render();
   });
+  document.getElementById('toggle-open').addEventListener('click', function () {
+    isOpen = !isOpen;
+    document.getElementById('closed-view').style.display = isOpen ? 'none' : 'block';
+    document.getElementById('open-view').style.display = isOpen ? 'block' : 'none';
+    this.textContent = isOpen ? 'Close book' : 'Open my Covey 📖';
+    if (isOpen) {
+      var spread = document.getElementById('spread');
+      spread.classList.remove('enter'); void spread.offsetWidth; spread.classList.add('enter');
+      renderOpen();
+    }
+  });
+  document.getElementById('prev').addEventListener('click', function () { flipTo(currentPos - 1); });
+  document.getElementById('next').addEventListener('click', function () { flipTo(currentPos + 1); });
   render();
 </script>
 </body>
