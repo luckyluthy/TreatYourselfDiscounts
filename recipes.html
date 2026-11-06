@@ -60,6 +60,7 @@
   </header>
 
   <div class="savedbar" id="savedbar"><b>🔖 Your saved recipes:</b> <span id="savedlist"></span></div>
+  <p class="note" id="syncnote" style="display:none; text-align:center;"></p>
 
   <div class="card" id="recipe-ice-cream">
     <span class="tag">Homemade</span>
@@ -150,7 +151,9 @@
   var NAMES = { "recipe-ice-cream": "Churned Vanilla Ice Cream", "recipe-root-beer": "Fermented Root Beer", "recipe-chicken-wraps": "Chicken Wraps" };
   var KEY = "tydSavedRecipes";
   function getSaved() { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch (e) { return []; } }
-  function setSaved(list) { try { localStorage.setItem(KEY, JSON.stringify(list)); } catch (e) {} }
+  function setSaved(list) { try { localStorage.setItem(KEY, JSON.stringify(list)); } catch (e) {} if (window.TYDSync) window.TYDSync.push(list); }
+  window.TYDGetSaved = getSaved;
+  window.TYDSetSaved = function (list) { setSaved(list); renderSaved(); };
   function renderSaved() {
     var saved = getSaved();
     var bar = document.getElementById("savedbar");
@@ -193,6 +196,43 @@
     document.querySelectorAll(".card").forEach(function (c) { c.classList.remove("printing"); });
   });
   renderSaved();
+</script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  var firebaseConfig = {
+    apiKey: "AIzaSyDoy5WjnhDlBqZaqZDUFkX6XodiXvQmr7I",
+    authDomain: "treatyourselfdiscounts-881a9.firebaseapp.com",
+    projectId: "treatyourselfdiscounts-881a9",
+    storageBucket: "treatyourselfdiscounts-881a9.firebasestorage.app",
+    messagingSenderId: "635205549581",
+    appId: "1:635205549581:web:698e046036b14f33f81f44"
+  };
+  var app = initializeApp(firebaseConfig);
+  var auth = getAuth(app);
+  var db = getFirestore(app);
+  var currentUser = null;
+  window.TYDSync = {
+    push: function (list) {
+      if (!currentUser) return;
+      setDoc(doc(db, "users", currentUser.uid), { savedRecipes: list }, { merge: true }).catch(function () {});
+    }
+  };
+  onAuthStateChanged(auth, function (user) {
+    currentUser = user;
+    var note = document.getElementById("syncnote");
+    if (!user) { note.style.display = "none"; return; }
+    note.style.display = "block";
+    note.textContent = "You are logged in as " + user.email + ", so your saved recipes sync to your Pond account on any device.";
+    getDoc(doc(db, "users", user.uid)).then(function (snap) {
+      var remote = (snap.exists() && snap.data().savedRecipes) || [];
+      var local = window.TYDGetSaved ? window.TYDGetSaved() : [];
+      var merged = remote.slice();
+      local.forEach(function (id) { if (merged.indexOf(id) === -1) merged.push(id); });
+      if (window.TYDSetSaved) window.TYDSetSaved(merged);
+    }).catch(function () {});
+  });
 </script>
 </body>
 </html>

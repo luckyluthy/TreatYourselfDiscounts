@@ -60,7 +60,7 @@
   <div class="card" id="account-card" style="display:none;">
     <h2>Welcome to your nest 🪺</h2>
     <p>You are logged in as <b id="who"></b>.</p>
-    <h3 style="color:#1f5f74; font-size:15px; margin:14px 0 6px;">Your saved recipes on this device</h3>
+    <h3 style="color:#1f5f74; font-size:15px; margin:14px 0 6px;">Your saved recipes, synced to your account</h3>
     <div class="savedlist" id="savedlist"><p style="color:#5b7d89;">Nothing saved yet. Head to <a href="recipes.html" style="color:#1f5f74; font-weight:700;">TYD's Kitchen</a> and tap Save recipe on a favorite.</p></div>
     <button class="btn btn-main" id="logout">Log out</button>
   </div>
@@ -73,6 +73,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
   import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
   var firebaseConfig = {
     apiKey: "AIzaSyDoy5WjnhDlBqZaqZDUFkX6XodiXvQmr7I",
@@ -84,6 +85,7 @@
   };
   var app = initializeApp(firebaseConfig);
   var auth = getAuth(app);
+  var db = getFirestore(app);
 
   var NAMES = { "recipe-ice-cream": "Churned Vanilla Ice Cream", "recipe-root-beer": "Fermented Root Beer", "recipe-chicken-wraps": "Chicken Wraps" };
   function $(id) { return document.getElementById(id); }
@@ -127,20 +129,30 @@
   });
   $("logout").addEventListener("click", function () { signOut(auth); });
 
-  function renderSaved() {
-    var saved = [];
-    try { saved = JSON.parse(localStorage.getItem("tydSavedRecipes")) || []; } catch (e) {}
+  function renderSavedList(saved) {
     if (!saved.length) return;
     $("savedlist").innerHTML = saved.map(function (id) {
       return '<a href="recipes.html#' + id + '">' + (NAMES[id] || id) + '</a>';
     }).join("");
+  }
+  function renderSaved(user) {
+    var local = [];
+    try { local = JSON.parse(localStorage.getItem("tydSavedRecipes")) || []; } catch (e) {}
+    renderSavedList(local);
+    if (!user) return;
+    getDoc(doc(db, "users", user.uid)).then(function (snap) {
+      var remote = (snap.exists() && snap.data().savedRecipes) || [];
+      var merged = remote.slice();
+      local.forEach(function (id) { if (merged.indexOf(id) === -1) merged.push(id); });
+      renderSavedList(merged);
+    }).catch(function () {});
   }
   onAuthStateChanged(auth, function (user) {
     if (user) {
       $("auth-card").style.display = "none";
       $("account-card").style.display = "block";
       $("who").textContent = user.email;
-      renderSaved();
+      renderSaved(user);
     } else {
       $("auth-card").style.display = "block";
       $("account-card").style.display = "none";
