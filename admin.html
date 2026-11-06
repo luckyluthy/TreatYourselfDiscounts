@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#ffd94d">
+<title>Admin | TreatYourselfDiscounts</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #d9f0f7; color: #23414d; }
+  .app { max-width: 880px; margin: 0 auto; min-height: 100vh; background: #fdf6ec; box-shadow: 0 0 24px rgba(35,65,77,.12); padding: 16px 16px 40px; }
+  a.back { color: #1f5f74; font-weight: 700; text-decoration: none; font-size: 14px; }
+  /* ---------- gate ---------- */
+  #gate { max-width: 380px; margin: 9vh auto 0; background: #fff; border: 2px solid #e8d5b5; border-radius: 20px; padding: 28px 22px; text-align: center; box-shadow: 0 10px 28px rgba(35,65,77,.15); }
+  #gate .duck { font-size: 44px; }
+  #gate h1 { font-size: 22px; margin: 8px 0 4px; color: #5b3a1e; }
+  #gate p { color: #7a5c3e; font-size: 14px; margin: 0 0 16px; }
+  #gate input { width: 100%; font-size: 16px; padding: 12px 14px; border-radius: 999px; border: 2px solid #e8d5b5; text-align: center; font-family: inherit; }
+  #gate button { width: 100%; margin-top: 10px; border: none; cursor: pointer; font-family: inherit; font-weight: 800; font-size: 15px; border-radius: 999px; padding: 12px; background: #b3543f; color: #fff; }
+  #gate .err { color: #b3261e; font-size: 13.5px; font-weight: 700; min-height: 18px; margin-top: 10px; }
+  @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-7px); } 75% { transform: translateX(7px); } }
+  #gate.shake { animation: shake .3s ease 2; }
+  /* ---------- admin content ---------- */
+  #admin { display: none; }
+  header.top { text-align: center; margin: 8px 0 4px; }
+  header.top h1 { margin: 0; font-size: 28px; color: #5b3a1e; }
+  .sub { margin: 6px 0 0; color: #7a5c3e; font-size: 14.5px; }
+  .layout { display: flex; gap: 20px; margin-top: 22px; align-items: flex-start; }
+  .tray { flex: 1.15; min-width: 0; }
+  .stage { flex: 1; min-width: 0; text-align: center; }
+  .panel { width: 240px; flex-shrink: 0; background: #fff; border: 2px solid #e8d5b5; border-radius: 16px; padding: 14px; }
+  @media (max-width: 760px) { .layout { flex-direction: column; } .panel { width: 100%; } }
+  h2 { font-size: 16px; margin: 0 0 10px; color: #5b3a1e; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .book { border: none; cursor: pointer; border-radius: 8px 12px 12px 8px; padding: 10px 6px 8px; min-height: 112px; color: #fff8ea; text-align: center; box-shadow: inset 4px 0 0 rgba(0,0,0,.18), 0 2px 6px rgba(35,65,77,.18); display: flex; flex-direction: column; align-items: center; justify-content: space-between; transition: transform .2s ease, opacity .2s ease; font-family: inherit; }
+  .book:hover { transform: translateY(-3px); }
+  .book .motif { font-size: 23px; line-height: 1; }
+  .book .t { font-size: 12.5px; font-weight: 800; line-height: 1.25; }
+  .book .a { font-size: 10.5px; opacity: .85; }
+  .book.used { opacity: .35; pointer-events: none; }
+  .sizes, .inserts { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { border: 2px solid #c9a86a; background: #fffdf6; color: #5b3a1e; font-weight: 700; font-size: 13px; border-radius: 999px; padding: 8px 12px; cursor: pointer; font-family: inherit; }
+  .chip.on { background: #5b3a1e; color: #ffe9c4; border-color: #5b3a1e; }
+  .chip.used { opacity: .35; pointer-events: none; }
+  .notebook-wrap { position: relative; margin: 0 auto; width: fit-content; }
+  .back-peek { position: absolute; right: -16px; top: 10px; width: 60px; height: 78%; border-radius: 8px 12px 12px 8px; box-shadow: inset 3px 0 0 rgba(0,0,0,.18), 0 6px 14px rgba(35,65,77,.2); display: none; align-items: flex-start; justify-content: center; padding-top: 10px; font-size: 20px; }
+  .notebook { margin: 0 auto; border-radius: 10px 16px 16px 10px; background: #8a8d91; box-shadow: inset 6px 0 0 rgba(0,0,0,.2), 0 10px 24px rgba(35,65,77,.25); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 18px; color: #fff8ea; transition: all .3s ease; position: relative; z-index: 1; }
+  .notebook .motif { font-size: 44px; }
+  .notebook .t { font-size: 19px; font-weight: 800; text-align: center; line-height: 1.3; }
+  .notebook .a { font-size: 12.5px; opacity: .85; }
+  .notebook .covey { position: absolute; top: 12px; font-size: 11px; letter-spacing: 2.5px; font-weight: 700; opacity: .8; }
+  .summary { font-size: 14px; text-align: left; }
+  .summary div { padding: 5px 0; border-bottom: 1px dashed #e8d5b5; }
+  .summary b { color: #5b3a1e; }
+  .btn { display: block; width: 100%; border: none; cursor: pointer; font-family: inherit; font-weight: 800; font-size: 14.5px; border-radius: 999px; padding: 11px; margin-top: 10px; background: #f3e9d4; color: #5b3a1e; }
+  .status { margin-top: 26px; background: #fff; border: 2px solid #e8d5b5; border-radius: 16px; padding: 18px; }
+  .status h2 { margin-bottom: 6px; }
+  .status li { margin-bottom: 7px; font-size: 14.5px; line-height: 1.45; }
+  .status ul { margin: 6px 0 0; padding-left: 20px; }
+  .how { display: flex; gap: 10px; margin-top: 22px; flex-wrap: wrap; }
+  .how div { flex: 1; min-width: 150px; background: #fff; border: 1px solid #e8d5b5; border-radius: 14px; padding: 12px; font-size: 14px; text-align: center; }
+  .how b { display: block; color: #5b3a1e; margin-bottom: 4px; }
+  footer { text-align: center; font-size: 12.5px; color: #7a5c3e; padding: 26px 12px 0; }
+  @keyframes pop { 0% { transform: scale(.96); } 60% { transform: scale(1.02); } 100% { transform: scale(1); } }
+  .pop { animation: pop .3s ease; }
+  @media (prefers-reduced-motion: reduce) { .book, .notebook { transition: none; } .pop, #gate.shake { animation: none; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <a class="back" href="index.html">&#8249; Back to the Pond</a>
+
+  <div id="gate">
+    <div class="duck">🦆</div>
+    <h1>Pond Admin</h1>
+    <p>This page is just for Lucy. Enter your passcode to see your Covey.</p>
+    <input type="password" id="pw" placeholder="Passcode" autocomplete="current-password">
+    <button id="unlock">Unlock</button>
+    <div class="err" id="err"></div>
+  </div>
+
+  <div id="admin">
+    <header class="top">
+      <h1>Covey Admin Preview</h1>
+      <p class="sub">Your private look at what your Covey would look like. Dress it up any way you like, nothing here is public and nothing is for sale.</p>
+    </header>
+
+    <div class="layout">
+      <section class="tray">
+        <h2>Covers: first tap is the front, second is the back</h2>
+        <div class="grid" id="covers"></div>
+        <h2 style="margin-top:20px;">Size</h2>
+        <div class="sizes" id="sizes"></div>
+        <h2 style="margin-top:20px;">Inserts (tap to add or remove)</h2>
+        <div class="inserts" id="inserts"></div>
+      </section>
+
+      <section class="stage">
+        <div class="notebook-wrap">
+          <div class="back-peek" id="back-peek"></div>
+          <div class="notebook" id="notebook" style="width:230px; height:300px;">
+            <span class="covey">C O V E Y</span>
+            <span class="motif" id="nb-motif">📖</span>
+            <span class="t" id="nb-title">Made of stories.</span>
+            <span class="a" id="nb-author">Tap a cover to begin</span>
+          </div>
+        </div>
+        <p class="sub" id="size-label">Size: A5</p>
+      </section>
+
+      <aside class="panel">
+        <h2>Your Covey</h2>
+        <div class="summary">
+          <div><b>Front:</b> <span id="sum-front">not picked</span></div>
+          <div><b>Back:</b> <span id="sum-back">not picked</span></div>
+          <div><b>Size:</b> <span id="sum-size">A5</span></div>
+          <div><b>Inserts:</b> <span id="sum-inserts">none</span></div>
+        </div>
+        <button class="btn" id="reset">Start over</button>
+        <button class="btn" id="lock">Lock this page</button>
+      </aside>
+    </div>
+
+    <div class="how">
+      <div><b>1. Pick your covers</b>Hard covers click off and on the hinged spine.</div>
+      <div><b>2. Fill it your way</b>Refill booklets slide in on elastics, plus a zip insert.</div>
+      <div><b>3. Swap anytime</b>Every part is replaceable and customizable.</div>
+    </div>
+
+    <div class="status">
+      <h2>Admin status, Nov 6, 2026</h2>
+      <ul>
+        <li><b>Prototype:</b> parked by you on Nov 5, 2026. The library 3D print route is drafted on paper only, nothing has been sent.</li>
+        <li><b>Kickstarter:</b> draft Basics saved, placeholder goal $5,000, nothing submitted or launched.</li>
+        <li><b>Wix site:</b> built but unpublished. Waitlist collects first name and email only.</li>
+        <li><b>Novel Bookstore:</b> pitch sent Nov 3, 2026, awaiting a reply. Instagram DM still held.</li>
+        <li><b>Public pieces:</b> Covey Covers Showcase and the Covey Cover Picker on this website. Route when revived: prototype, then Etsy founding batch of 25 to 50, then Kickstarter.</li>
+        <li><b>Reminder:</b> Covey is a working name. Trademark and domain checks are still owed before anything prints or launches publicly.</li>
+      </ul>
+    </div>
+
+    <footer>Covey by Feather Your Nest. A covey is a small flock of birds. This is a small flock of books.</footer>
+  </div>
+</div>
+
+<script>
+  var HASH = "609f4490502a585b2ce3299841af2eb172f279fcd48f4d058c7f664555c8a28e";
+  var gate = document.getElementById('gate');
+  var admin = document.getElementById('admin');
+  function openAdmin() { gate.style.display = 'none'; admin.style.display = 'block'; }
+  if (sessionStorage.getItem('tydAdmin') === '1') openAdmin();
+  function tryUnlock() {
+    var v = document.getElementById('pw').value.trim().toLowerCase();
+    if (!v) return;
+    crypto.subtle.digest('SHA-256', new TextEncoder().encode(v)).then(function (buf) {
+      var hex = Array.from(new Uint8Array(buf)).map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+      if (hex === HASH) { sessionStorage.setItem('tydAdmin', '1'); openAdmin(); }
+      else {
+        document.getElementById('err').textContent = 'That passcode is not it. Try again.';
+        gate.classList.remove('shake'); void gate.offsetWidth; gate.classList.add('shake');
+      }
+    });
+  }
+  document.getElementById('unlock').addEventListener('click', tryUnlock);
+  document.getElementById('pw').addEventListener('keydown', function (e) { if (e.key === 'Enter') tryUnlock(); });
+  document.getElementById('lock').addEventListener('click', function () {
+    sessionStorage.removeItem('tydAdmin');
+    admin.style.display = 'none'; gate.style.display = 'block';
+    document.getElementById('pw').value = '';
+  });
+
+  var COVERS = [
+    { t: "Robin Hood", a: "Howard Pyle", c: "#43603a", m: "🏹" },
+    { t: "Snow White", a: "Brothers Grimm", c: "#9e2b25", m: "🍎" },
+    { t: "Alice's Adventures in Wonderland", a: "Lewis Carroll", c: "#5b84ae", m: "🗝️" },
+    { t: "Peter Pan", a: "J. M. Barrie", c: "#2e4057", m: "⛵" },
+    { t: "Treasure Island", a: "Robert Louis Stevenson", c: "#b07d2b", m: "🧭" },
+    { t: "Beauty and the Beast", a: "Jeanne-Marie Leprince de Beaumont", c: "#8e3b46", m: "🌹" },
+    { t: "The Secret Garden", a: "Frances Hodgson Burnett", c: "#718355", m: "🔑" },
+    { t: "Anne of Green Gables", a: "L. M. Montgomery", c: "#b5654a", m: "🏠" },
+    { t: "Little Women", a: "Louisa May Alcott", c: "#6d597a", m: "✒️" },
+    { t: "Pride and Prejudice", a: "Jane Austen", c: "#1f6f6b", m: "🦚" },
+    { t: "The Wonderful Wizard of Oz", a: "L. Frank Baum", c: "#2f7d4f", m: "🎈" },
+    { t: "The Jungle Book", a: "Rudyard Kipling", c: "#8f451d", m: "🐾" }
+  ];
+  var SIZES = [ { n: "A5", w: 230, h: 300 }, { n: "Regular", w: 205, h: 315 }, { n: "Personal", w: 180, h: 285 }, { n: "Passport", w: 160, h: 235 } ];
+  var INSERTS = ["A5 Refill Booklet", "Regular Refill Booklet", "Passport Refill Booklet", "Personal Refill Booklet", "Coupon Keeper"];
+  var pickedCovers = [], pickedInserts = [], size = "A5";
+
+  var coversEl = document.getElementById('covers');
+  COVERS.forEach(function (cv, i) {
+    var b = document.createElement('button');
+    b.className = 'book'; b.id = 'cover-' + i; b.style.background = cv.c;
+    b.innerHTML = '<span class="motif">' + cv.m + '</span><span class="t">' + cv.t + '</span><span class="a">' + cv.a + '</span>';
+    b.addEventListener('click', function () {
+      if (pickedCovers.indexOf(i) !== -1) return;
+      if (pickedCovers.length >= 2) return;
+      pickedCovers.push(i); b.classList.add('used'); render();
+    });
+    coversEl.appendChild(b);
+  });
+  var sizesEl = document.getElementById('sizes');
+  SIZES.forEach(function (sz) {
+    var b = document.createElement('button');
+    b.className = 'chip' + (sz.n === size ? ' on' : ''); b.textContent = sz.n; b.id = 'size-' + sz.n;
+    b.addEventListener('click', function () {
+      size = sz.n;
+      SIZES.forEach(function (s2) { document.getElementById('size-' + s2.n).classList.toggle('on', s2.n === size); });
+      var nb = document.getElementById('notebook');
+      nb.style.width = sz.w + 'px'; nb.style.height = sz.h + 'px';
+      render();
+    });
+    sizesEl.appendChild(b);
+  });
+  var insertsEl = document.getElementById('inserts');
+  INSERTS.forEach(function (name, i) {
+    var b = document.createElement('button');
+    b.className = 'chip'; b.id = 'insert-' + i; b.textContent = name;
+    b.addEventListener('click', function () {
+      var k = pickedInserts.indexOf(i);
+      if (k === -1) { pickedInserts.push(i); b.classList.add('on'); }
+      else { pickedInserts.splice(k, 1); b.classList.remove('on'); }
+      render();
+    });
+    insertsEl.appendChild(b);
+  });
+  function render() {
+    var nb = document.getElementById('notebook');
+    var front = pickedCovers[0], back = pickedCovers[1];
+    if (front !== undefined) {
+      var cv = COVERS[front];
+      nb.style.background = cv.c;
+      document.getElementById('nb-motif').textContent = cv.m;
+      document.getElementById('nb-title').textContent = cv.t;
+      document.getElementById('nb-author').textContent = cv.a;
+    } else {
+      nb.style.background = '#8a8d91';
+      document.getElementById('nb-motif').textContent = '📖';
+      document.getElementById('nb-title').textContent = 'Made of stories.';
+      document.getElementById('nb-author').textContent = 'Tap a cover to begin';
+    }
+    var peek = document.getElementById('back-peek');
+    if (back !== undefined) {
+      peek.style.display = 'flex'; peek.style.background = COVERS[back].c; peek.textContent = COVERS[back].m;
+    } else peek.style.display = 'none';
+    nb.classList.remove('pop'); void nb.offsetWidth; nb.classList.add('pop');
+    document.getElementById('sum-front').textContent = front !== undefined ? COVERS[front].t : 'not picked';
+    document.getElementById('sum-back').textContent = back !== undefined ? COVERS[back].t : 'not picked';
+    document.getElementById('sum-size').textContent = size;
+    document.getElementById('size-label').textContent = 'Size: ' + size;
+    document.getElementById('sum-inserts').textContent = pickedInserts.length ? pickedInserts.map(function (i) { return INSERTS[i]; }).join(', ') : 'none';
+  }
+  document.getElementById('reset').addEventListener('click', function () {
+    pickedCovers = []; pickedInserts = [];
+    COVERS.forEach(function (_, i) { document.getElementById('cover-' + i).classList.remove('used'); });
+    INSERTS.forEach(function (_, i) { document.getElementById('insert-' + i).classList.remove('on'); });
+    render();
+  });
+  render();
+</script>
+</body>
+</html>
