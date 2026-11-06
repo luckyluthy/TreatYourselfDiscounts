@@ -90,8 +90,9 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  // A fresh set of 7 weird items hides every day. The day's date seeds the
-  // pick, so everyone gets the same pond all day, and a new one tomorrow.
+  // Every game is random: 7 items are picked fresh from the pool on every
+  // visit and every Start Over, one per hiding zone, and the zones used are
+  // never close together, so no two items ever sit side by side.
   var POOL = [
     { n: "Snowman", i: "⛄", c: "I melt at the thought of summer and wear winter wherever I go." },
     { n: "Cactus", i: "🌵", c: "I store water for dry days and give very prickly hugs." },
@@ -114,17 +115,32 @@
   ];
   var ZONES = [ [58, 9], [13, 10], [85, 14], [5, 33], [30, 26], [71, 38], [45, 52], [88, 63], [64, 74], [55, 90], [20, 88], [38, 70] ];
   var COUNT = 7;
-  function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
-  var now = new Date();
-  var seed = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
-  var rnd = mulberry32(seed);
-  function shuffled(arr) { var a = arr.slice(); for (var k = a.length - 1; k > 0; k--) { var j = Math.floor(rnd() * (k + 1)); var t = a[k]; a[k] = a[j]; a[j] = t; } return a; }
+  function zoneDist(a, b) { var dx = a[0] - b[0], dy = a[1] - b[1]; return Math.sqrt(dx * dx + dy * dy); }
+  function pickZones() {
+    for (var attempt = 0; attempt < 80; attempt++) {
+      var min = 24 - attempt;
+      if (min < 20) min = 20;
+      var picked = [];
+      var order = randomlyShuffled(ZONES);
+      for (var i = 0; i < order.length && picked.length < COUNT; i++) {
+        var ok = true;
+        for (var j = 0; j < picked.length; j++) { if (zoneDist(order[i], picked[j]) < min) { ok = false; break; } }
+        if (ok) picked.push(order[i]);
+      }
+      if (picked.length === COUNT) return picked;
+    }
+    return randomlyShuffled(ZONES).slice(0, COUNT);
+  }
+  function pickItems() {
+    var spots = pickZones();
+    return randomlyShuffled(POOL).slice(0, COUNT).map(function (it, idx) {
+      var z = spots[idx];
+      return { n: it.n, i: it.i, c: it.c, x: Math.max(3, Math.min(97, z[0] + (Math.random() * 6 - 3))), y: Math.max(5, Math.min(95, z[1] + (Math.random() * 5 - 2.5))), s: 23 + Math.floor(Math.random() * 8) };
+    });
+  }
   function randomlyShuffled(arr) { var a = arr.slice(); for (var k = a.length - 1; k > 0; k--) { var j = Math.floor(Math.random() * (k + 1)); var t = a[k]; a[k] = a[j]; a[j] = t; } return a; }
-  var ITEMS = shuffled(POOL).slice(0, COUNT).map(function (it, idx) {
-    var z = shuffled(ZONES)[idx];
-    return { n: it.n, i: it.i, c: it.c, x: Math.max(3, Math.min(97, z[0] + (rnd() * 6 - 3))), y: Math.max(5, Math.min(95, z[1] + (rnd() * 5 - 2.5))), s: 23 + Math.floor(rnd() * 8) };
-  });
-  document.getElementById('today').textContent = 'Today’s pond: ' + now.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) + ' · new items tomorrow';
+  var ITEMS = [];
+  document.getElementById('today').textContent = 'A fresh random pond every game: 7 things that do not belong, hidden somewhere new each time you play.';
 
   var scene = document.getElementById('scene');
   var list = document.getElementById('found-list');
@@ -138,7 +154,17 @@
     t.textContent = msg; t.classList.add('show');
     setTimeout(function () { t.classList.remove('show'); }, 1900);
   }
-  ITEMS.forEach(function (it, idx) {
+  function buildGame() {
+    ITEMS = pickItems();
+    found = 0;
+    hintCycle = 0;
+    hintPanel.hidden = true;
+    document.getElementById('pill').textContent = 'Found: 0 / ' + COUNT;
+    document.getElementById('win').classList.remove('show');
+    var old = scene.querySelectorAll('.spy');
+    for (var o = 0; o < old.length; o++) old[o].remove();
+    list.innerHTML = '';
+    ITEMS.forEach(function (it, idx) {
     var b = document.createElement('button');
     b.className = 'spy'; b.id = 'spy-' + idx;
     b.style.left = it.x + '%'; b.style.top = it.y + '%'; b.style.fontSize = it.s + 'px';
@@ -163,7 +189,9 @@
     var chip = document.createElement('span');
     chip.id = 'chip-' + idx; chip.textContent = '❓ Still hiding';
     list.appendChild(chip);
-  });
+    });
+  }
+  buildGame();
   document.getElementById('hint').addEventListener('click', function () {
     var missing = [];
     ITEMS.forEach(function (it, idx) {
@@ -181,26 +209,8 @@
     hintText.textContent = pick.item.c;
   });
   document.getElementById('reset').addEventListener('click', function () {
-    found = 0;
-    hintCycle = 0;
-    hintPanel.hidden = true;
-    hintKicker.textContent = 'Hint';
-    hintText.textContent = '';
-    var resetZones = randomlyShuffled(ZONES).slice(0, ITEMS.length);
-    ITEMS.forEach(function (it, idx) {
-      var b = document.getElementById('spy-' + idx);
-      b.classList.remove('found');
-      var zone = resetZones[idx];
-      var nx = Math.max(3, Math.min(97, zone[0] + (Math.random() * 6 - 3)));
-      var ny = Math.max(5, Math.min(95, zone[1] + (Math.random() * 5 - 2.5)));
-      it.x = nx; it.y = ny;
-      b.style.left = nx + '%'; b.style.top = ny + '%';
-      var chip = document.getElementById('chip-' + idx);
-      chip.classList.remove('got'); chip.textContent = '❓ Still hiding';
-    });
-    document.getElementById('pill').textContent = 'Found: 0 / ' + ITEMS.length;
-    document.getElementById('win').classList.remove('show');
-    toast('Same weird items, new hiding spots. Come back tomorrow for a new set!');
+    buildGame();
+    toast('Fresh pond! New random items in new hiding spots.');
   });
 </script>
 </body>
