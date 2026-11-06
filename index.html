@@ -75,7 +75,15 @@
   .deal { transition: transform .25s ease, box-shadow .25s ease; }
   .deal:hover { transform: translateY(-2px); }
   .footer-duck { animation: pondfloat 6s ease-in-out infinite; }
-  @media (prefers-reduced-motion: reduce) { header, .footer-duck { animation: none; } .card, .deal { transition: none; } }
+  @media (prefers-reduced-motion: reduce) { header, .footer-duck, .play-banner { animation: none; } .card, .deal { transition: none; } }
+
+  .play-banner { display: flex; align-items: center; gap: 12px; margin: 14px 16px 0; padding: 14px 16px; border-radius: 18px; text-decoration: none; color: #14505f; background: linear-gradient(120deg, #ffe066, #ffd94d 40%, #a5dcf0); border: 2px solid #f0c93e; box-shadow: 0 6px 16px rgba(35,65,77,.15); animation: pondfloat 7s ease-in-out infinite; transition: transform .25s ease, box-shadow .25s ease; }
+  .play-banner:hover { transform: translateY(-3px); box-shadow: 0 10px 22px rgba(35,65,77,.2); }
+  .play-banner .play-emoji { font-size: 30px; line-height: 1; }
+  .play-banner .play-text { flex: 1; min-width: 0; }
+  .play-banner .play-text b { display: block; font-size: 16.5px; }
+  .play-banner .play-text span { font-size: 13px; color: #3f6b7a; }
+  .play-banner .play-arrow { font-size: 24px; color: #1f5f74; }
 </style>
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -90,6 +98,11 @@
     <h1 class="sr-only">TreatYourselfDiscounts</h1>
     <p class="sr-only">Welcome to the Pond! Verified deals and discount links, all in one place.</p>
   </header>
+  <a class="play-banner" href="pond-charm-bar.html">
+    <span class="play-emoji" aria-hidden="true">🪷</span>
+    <span class="play-text"><b>Play the Pond Charm Bar</b><span>Feather the nest with 7 charms and reveal today's deals</span></span>
+    <span class="play-arrow" aria-hidden="true">&#8250;</span>
+  </a>
   <div class="social-row">
     <a href="https://discord.gg/zfcwECetx2" target="_blank" rel="noopener">Discord Community</a>
     <a href="https://www.instagram.com/treatyourselfdiscounts" target="_blank" rel="noopener">Instagram</a>
@@ -105,6 +118,7 @@
         <a href="#postpartum">Postpartum Picks <span>9</span></a>
         <a href="#shop">Shop The Pond <span>5</span></a>
         <a href="#more">More From The Pond <span>4</span></a>
+        <a href="pond-charm-bar.html">Pond Charm Bar <span>Play</span></a>
       </div>
     <div class="brand-side">
       <h3>Shop by brand</h3>
