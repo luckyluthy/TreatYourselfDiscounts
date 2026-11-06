@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#ffd94d">
+<meta name="description" content="Your Pond Account: sign up or log in to TreatYourselfDiscounts. Accounts are free and optional, and every deal stays public.">
+<title>Pond Account | TreatYourselfDiscounts</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #d9f0f7; color: #23414d; }
+  .app { max-width: 560px; margin: 0 auto; min-height: 100vh; background: #bfe6f2; box-shadow: 0 0 24px rgba(35,65,77,.12); padding: 16px 16px 40px; }
+  a.back { color: #1f5f74; font-weight: 700; text-decoration: none; font-size: 14px; }
+  header.top { text-align: center; margin: 10px 0 4px; }
+  h1 { margin: 0; font-size: 28px; color: #1f5f74; }
+  .sub { margin: 6px 0 0; color: #3f6b7a; font-size: 14.5px; line-height: 1.5; }
+  .card { background: #fff; border-radius: 18px; padding: 18px; margin: 16px 0; box-shadow: 0 2px 8px rgba(35,65,77,.08); }
+  .card h2 { margin: 0 0 6px; font-size: 19px; color: #1f5f74; }
+  .card p { margin: 6px 0; font-size: 14.5px; line-height: 1.5; }
+  label { display: block; font-size: 13px; font-weight: 700; color: #1f5f74; margin: 12px 0 4px; }
+  input { width: 100%; border: 2px solid #bcd9e4; border-radius: 12px; padding: 11px 12px; font-size: 15px; font-family: inherit; color: #23414d; background: #fbfdfe; }
+  input:focus { outline: none; border-color: #1f5f74; }
+  .btn { display: block; width: 100%; border: none; cursor: pointer; font-family: inherit; font-weight: 800; font-size: 15px; border-radius: 999px; padding: 12px; margin-top: 12px; transition: transform .2s ease; }
+  .btn:hover { transform: translateY(-2px); }
+  .btn-main { background: #1f5f74; color: #fff; }
+  .btn-alt { background: #fff3b0; color: #6b5900; }
+  .btn-ghost { background: transparent; color: #1f5f74; font-size: 13.5px; font-weight: 700; padding: 8px; }
+  .status { display: none; border-radius: 12px; padding: 10px 12px; font-size: 14px; margin-top: 12px; line-height: 1.45; }
+  .status.show { display: block; }
+  .status.err { background: #fdecec; color: #8c2b2b; border: 1.5px solid #f0b4b4; }
+  .status.ok { background: #e9f9ee; color: #1e5c33; border: 1.5px solid #a8dcb8; }
+  .savedlist a { display: inline-block; background: #eaf7fb; border-radius: 999px; padding: 6px 12px; margin: 0 6px 6px 0; color: #1f5f74; font-weight: 700; font-size: 13.5px; text-decoration: none; }
+  footer { margin-top: 26px; text-align: center; }
+  .disc { font-size: 12px; color: #5b7d89; line-height: 1.5; max-width: 480px; margin: 10px auto 0; }
+  @media (prefers-reduced-motion: reduce) { .btn { transition: none; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <a class="back" href="index.html">&#8249; Back to the Pond</a>
+
+  <header class="top">
+    <h1>🦆 Your Pond Account</h1>
+    <p class="sub">Free and optional, always. Every deal on this site stays public for everyone, account or not. Your account is your own little nest: a place for your saved favorites.</p>
+  </header>
+
+  <div class="card" id="auth-card">
+    <h2>Log in or sign up</h2>
+    <p>New to the Pond? Create an account with your email and a password. Already have one? Log in with the same email.</p>
+    <label for="email">Email</label>
+    <input id="email" type="email" autocomplete="email" placeholder="you@example.com">
+    <label for="password">Password</label>
+    <input id="password" type="password" autocomplete="current-password" placeholder="At least 6 characters">
+    <button class="btn btn-main" id="login">Log in</button>
+    <button class="btn btn-alt" id="signup">Create my account</button>
+    <button class="btn btn-ghost" id="forgot">Forgot your password?</button>
+    <div class="status" id="status"></div>
+  </div>
+
+  <div class="card" id="account-card" style="display:none;">
+    <h2>Welcome to your nest 🪺</h2>
+    <p>You are logged in as <b id="who"></b>.</p>
+    <h3 style="color:#1f5f74; font-size:15px; margin:14px 0 6px;">Your saved recipes on this device</h3>
+    <div class="savedlist" id="savedlist"><p style="color:#5b7d89;">Nothing saved yet. Head to <a href="recipes.html" style="color:#1f5f74; font-weight:700;">TYD's Kitchen</a> and tap Save recipe on a favorite.</p></div>
+    <button class="btn btn-main" id="logout">Log out</button>
+  </div>
+
+  <footer>
+    <p class="disc">Passwords are handled by Firebase, Google's secure account service. This site never sees or stores your password. Part of TreatYourselfDiscounts, the Pond. Welcome to the Pond!</p>
+  </footer>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+  var firebaseConfig = {
+    apiKey: "AIzaSyDoy5WjnhDlBqZaqZDUFkX6XodiXvQmr7I",
+    authDomain: "treatyourselfdiscounts-881a9.firebaseapp.com",
+    projectId: "treatyourselfdiscounts-881a9",
+    storageBucket: "treatyourselfdiscounts-881a9.firebasestorage.app",
+    messagingSenderId: "635205549581",
+    appId: "1:635205549581:web:698e046036b14f33f81f44"
+  };
+  var app = initializeApp(firebaseConfig);
+  var auth = getAuth(app);
+
+  var NAMES = { "recipe-ice-cream": "Churned Vanilla Ice Cream", "recipe-root-beer": "Fermented Root Beer", "recipe-chicken-wraps": "Chicken Wraps" };
+  function $(id) { return document.getElementById(id); }
+  function showStatus(msg, ok) {
+    var s = $("status");
+    s.textContent = msg;
+    s.className = "status show " + (ok ? "ok" : "err");
+  }
+  function friendly(err) {
+    var c = (err && err.code) || "";
+    if (c === "auth/email-already-in-use") return "That email already has an account. Try logging in instead.";
+    if (c === "auth/invalid-credential" || c === "auth/wrong-password" || c === "auth/user-not-found") return "That email and password do not match. Check them and try again, or use Forgot your password.";
+    if (c === "auth/weak-password") return "That password is too short. Please use at least 6 characters.";
+    if (c === "auth/invalid-email") return "That email address does not look complete. Check it and try again.";
+    if (c === "auth/too-many-requests") return "Too many tries in a row. Please wait a little and try again.";
+    if (c === "auth/network-request-failed") return "The connection hiccuped. Check your internet and try again.";
+    return "Something did not work. Please try again in a moment.";
+  }
+  function creds() { return { email: $("email").value.trim(), pw: $("password").value }; }
+
+  $("signup").addEventListener("click", function () {
+    var c = creds();
+    if (!c.email || !c.pw) { showStatus("Please fill in both your email and a password first."); return; }
+    createUserWithEmailAndPassword(auth, c.email, c.pw)
+      .then(function () { showStatus("Your Pond account is created. Welcome in!", true); })
+      .catch(function (e) { showStatus(friendly(e)); });
+  });
+  $("login").addEventListener("click", function () {
+    var c = creds();
+    if (!c.email || !c.pw) { showStatus("Please fill in both your email and your password first."); return; }
+    signInWithEmailAndPassword(auth, c.email, c.pw)
+      .then(function () { showStatus("Logged in. Welcome back!", true); })
+      .catch(function (e) { showStatus(friendly(e)); });
+  });
+  $("forgot").addEventListener("click", function () {
+    var email = $("email").value.trim();
+    if (!email) { showStatus("Type your email above first, then tap Forgot your password and we will send you a reset link."); return; }
+    sendPasswordResetEmail(auth, email)
+      .then(function () { showStatus("Password reset email sent to " + email + ". Check your inbox (and spam, just in case).", true); })
+      .catch(function (e) { showStatus(friendly(e)); });
+  });
+  $("logout").addEventListener("click", function () { signOut(auth); });
+
+  function renderSaved() {
+    var saved = [];
+    try { saved = JSON.parse(localStorage.getItem("tydSavedRecipes")) || []; } catch (e) {}
+    if (!saved.length) return;
+    $("savedlist").innerHTML = saved.map(function (id) {
+      return '<a href="recipes.html#' + id + '">' + (NAMES[id] || id) + '</a>';
+    }).join("");
+  }
+  onAuthStateChanged(auth, function (user) {
+    if (user) {
+      $("auth-card").style.display = "none";
+      $("account-card").style.display = "block";
+      $("who").textContent = user.email;
+      renderSaved();
+    } else {
+      $("auth-card").style.display = "block";
+      $("account-card").style.display = "none";
+    }
+  });
+</script>
+</body>
+</html>
