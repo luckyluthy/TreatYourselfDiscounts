@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#ffd94d">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="description" content="Search the whole Pond: brands, live deals, coupon codes, all 261 recipes, and every page, in one search.">
+<title>Search the Pond | TreatYourselfDiscounts</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #d9f0f7; color: #23414d; }
+  .app { max-width: 640px; margin: 0 auto; min-height: 100vh; background: #bfe6f2; box-shadow: 0 0 24px rgba(35,65,77,.12); padding: 16px 16px 40px; }
+  a.back { color: #1f5f74; font-weight: 700; text-decoration: none; font-size: 14px; }
+  h1 { text-align: center; color: #1f5f74; font-size: 27px; margin: 12px 0 4px; }
+  .sub { text-align: center; color: #3f6b7a; font-size: 14.5px; margin: 0 0 14px; line-height: 1.5; }
+  .srow { display: flex; gap: 8px; }
+  #q { flex: 1; border: 2px solid #bcd9e4; border-radius: 999px; padding: 13px 18px; font-size: 16px; font-family: inherit; background: #fff; color: #23414d; }
+  #q:focus { outline: none; border-color: #1f5f74; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; margin: 12px 0 4px; }
+  .chip { border: 2px solid #bcd9e4; background: #fff; color: #1f5f74; border-radius: 999px; padding: 6px 13px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+  .chip.on { background: #1f5f74; color: #fff; border-color: #1f5f74; }
+  .count { color: #3f6b7a; font-size: 13.5px; margin: 10px 2px; }
+  .res { background: #fff; border-radius: 14px; padding: 12px 14px; margin: 0 0 9px; box-shadow: 0 2px 6px rgba(35,65,77,.07); display: flex; gap: 12px; align-items: center; text-decoration: none; color: inherit; }
+  .res img { width: 56px; height: 56px; object-fit: cover; border-radius: 10px; background: #eaf7fb; flex: none; }
+  .res .tt { font-weight: 800; color: #1f5f74; font-size: 15.5px; line-height: 1.3; }
+  .res .ss { color: #3f6b7a; font-size: 13.5px; line-height: 1.4; margin-top: 2px; }
+  .tag { flex: none; font-size: 10.5px; font-weight: 800; letter-spacing: .4px; text-transform: uppercase; border-radius: 999px; padding: 4px 9px; }
+  .tag.Brand { background: #eaf7fb; color: #1f5f74; }
+  .tag.Deal { background: #e9f9ee; color: #1e5c33; }
+  .tag.Recipe { background: #fff3b0; color: #6b5900; }
+  .tag.Page { background: #f3e8fb; color: #5b3a75; }
+  .empty { text-align: center; color: #3f6b7a; font-size: 15px; padding: 26px 10px; line-height: 1.6; }
+  footer { text-align: center; font-size: 12px; color: #5b7d89; margin-top: 22px; line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="app">
+  <a class="back" href="index.html">&#8249; Back to the Pond</a>
+  <h1>🔎 Search the whole Pond</h1>
+  <p class="sub">Brands, live deals, coupon codes, all 261 recipes, and every page. One search, everything.</p>
+  <div class="srow"><input id="q" type="search" placeholder="Try: projector, TYD10, chicken, coupon..." aria-label="Search the whole Pond"></div>
+  <div class="chips" id="chips">
+    <button class="chip on" data-f="All" type="button">Everything</button>
+    <button class="chip" data-f="Brand" type="button">Brands</button>
+    <button class="chip" data-f="Deal" type="button">Deals</button>
+    <button class="chip" data-f="Recipe" type="button">Recipes</button>
+    <button class="chip" data-f="Page" type="button">Pages</button>
+  </div>
+  <p class="count" id="count">Loading the Pond...</p>
+  <div id="results"></div>
+  <footer>Deals and prices can change at the store. Part of TreatYourselfDiscounts, the Pond. Welcome to the Pond!</footer>
+</div>
+<script>
+  var ENTRIES = [], filter = "All";
+  var qEl = document.getElementById("q"), resEl = document.getElementById("results"), countEl = document.getElementById("count");
+  function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+  function score(e, tokens) {
+    var title = e.title.toLowerCase(), sub = (e.sub || "").toLowerCase(), kw = e.kw || "";
+    var sc = 0;
+    for (var i = 0; i < tokens.length; i++) {
+      var t = tokens[i], hit = false;
+      if (title.indexOf(t) > -1) { sc += 10; hit = true; }
+      if (sub.indexOf(t) > -1) { sc += 4; hit = true; }
+      if (kw.indexOf(t) > -1) { sc += 3; hit = true; }
+      if (!hit) return -1;
+    }
+    return sc;
+  }
+  function render() {
+    var q = qEl.value.trim().toLowerCase();
+    var tokens = q ? q.split(/\s+/) : [];
+    var out = [];
+    ENTRIES.forEach(function (e) {
+      if (filter !== "All" && e.t !== filter) return;
+      if (!tokens.length) { out.push({ e: e, sc: 0 }); return; }
+      var sc = score(e, tokens);
+      if (sc >= 0) out.push({ e: e, sc: sc });
+    });
+    out.sort(function (a, b) { return b.sc - a.sc; });
+    var total = out.length;
+    out = out.slice(0, 60);
+    countEl.textContent = !ENTRIES.length ? "Loading the Pond..." :
+      (!q && filter === "All" ? "Showing a first handful of the Pond. Start typing to search all " + ENTRIES.length + " things." :
+      total + (total === 1 ? " match" : " matches") + (total > 60 ? ", here are the best 60" : "") + ".");
+    if (!out.length) {
+      resEl.innerHTML = '<div class="empty">No matches for that one. Try a brand name, a code like TYD10, or an ingredient like chicken. 🦆</div>';
+      return;
+    }
+    resEl.innerHTML = out.map(function (o) {
+      var e = o.e;
+      var ext = /^https?:/.test(e.href) && e.href.indexOf("treatyourselfdiscounts.github.io") === -1;
+      return '<a class="res" href="' + esc(e.href) + '"' + (ext ? ' target="_blank" rel="noopener"' : "") + '>'
+        + (e.img ? '<img src="' + esc(e.img) + '" alt="" loading="lazy" onerror="this.remove()">' : "")
+        + '<span style="flex:1;"><span class="tt">' + esc(e.title) + '</span><div class="ss">' + esc(e.sub) + '</div></span>'
+        + '<span class="tag ' + e.t + '">' + e.t + '</span></a>';
+    }).join("");
+  }
+  document.getElementById("chips").addEventListener("click", function (ev) {
+    var b = ev.target.closest(".chip"); if (!b) return;
+    filter = b.getAttribute("data-f");
+    this.querySelectorAll(".chip").forEach(function (c) { c.classList.toggle("on", c === b); });
+    render();
+  });
+  qEl.addEventListener("input", render);
+  var start = new URLSearchParams(location.search).get("q");
+  if (start) qEl.value = start;
+  fetch("search-index.json").then(function (r) { return r.json(); }).then(function (d) {
+    ENTRIES = d.entries || [];
+    render();
+    qEl.focus();
+  }).catch(function () { countEl.textContent = "The search list could not load. Check your connection and refresh."; });
+</script>
+<script type="module" src="auth-pill.js"></script>
+<script src="site-nav.js"></script>
+</body>
+</html>

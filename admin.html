@@ -257,6 +257,7 @@
       <input type="text" id="ntitle" placeholder="Deal headline, like: Aurzen projector, half off today">
       <input type="text" id="nmsg" placeholder="Short message: the price, the code, when it ends">
       <input type="url" id="nlink" placeholder="Deal link (full https:// link)">
+      <select id="ntag" style="width:100%; padding:11px 12px; border:2px solid #bcd9e4; border-radius:12px; font-size:15px; margin-top:10px; font-family:inherit; background:#fbfdfe; color:#23414d;"><option value="general">Category: General (everyone sees it)</option><option value="amazon-baby">Amazon &amp; Baby</option><option value="home">Home</option><option value="tech">Tech</option><option value="beauty">Beauty &amp; Self-Care</option><option value="food">Food &amp; Recipes</option><option value="price-drops">Big price drops</option></select>
       <button class="mbtn" id="npost">Post alert to members</button>
       <button class="mbtn alt" id="nemail">Email it too</button>
       <div id="nstat" style="font-size:13.5px; margin-top:8px; line-height:1.45;"></div>
@@ -602,7 +603,7 @@
     if (!title || !msg) { nstat("Write a headline and a short message first."); return; }
     if (link && link.indexOf("https://") !== 0) { nstat("The deal link needs to be a full https:// link, or leave it blank."); return; }
     if (!auth.currentUser) { nstat("Sign in above with your Pond account first, then post."); return; }
-    addDoc(collection(db, "announcements"), { title: title, message: msg, link: link, from: "TYD", createdAt: serverTimestamp() })
+    addDoc(collection(db, "announcements"), { title: title, message: msg, link: link, tag: $("ntag").value, from: "TYD", createdAt: serverTimestamp() })
       .then(function () { nstat("Posted! Members will see this alert in their Pond Account under Deal Alerts.", true); })
       .catch(function (err) {
         if (err && err.code === "permission-denied") nstat("The database has not flipped your owner switch yet. Tell Goose once your Pond account is made and this will light up.");
@@ -613,7 +614,7 @@
     var title = $("ntitle").value.trim(), msg = $("nmsg").value.trim(), link = $("nlink").value.trim();
     if (!title || !msg) { nstat("Write a headline and a short message first, then tap Email it too."); return; }
     if (!memberEmails.length) { nstat("No member emails loaded yet. Sign in above so your member list loads, then tap Email it too."); return; }
-    var body = msg + (link ? "\n\nSee the deal: " + link : "") + "\n\nFrom TreatYourselfDiscounts, the Pond. Deals can end or sell out anytime.";
+    var body = "Category: " + $("ntag").selectedOptions[0].textContent.replace("Category: ", "") + "\n\n" + msg + (link ? "\n\nSee the deal: " + link : "") + "\n\nFrom TreatYourselfDiscounts, the Pond. Deals can end or sell out anytime.";
     window.location.href = "mailto:?bcc=" + encodeURIComponent(memberEmails.join(",")) + "&subject=" + encodeURIComponent("🔔 Pond deal alert: " + title) + "&body=" + encodeURIComponent(body);
     nstat("Your mail app should open with every member in BCC, so members never see each other's emails. Just tap send there.", true);
   });

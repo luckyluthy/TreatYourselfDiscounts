@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="theme-color" content="#ffd94d">
 <meta name="description" content="Lucy's Recipes: her whole cookbook collection, cookies, pies, soups, drinks and family favorites, with search and categories.">
 <title>Lucy's Recipes | TreatYourselfDiscounts</title>
@@ -5415,7 +5417,7 @@ hot sauce</p>
   var metric = false;
   var GKEY = "tydGrocery", PKEY = "tydMealPlan";
   function load(k, d) { try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } }
-  function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} if (typeof scheduleCookPush === "function") scheduleCookPush(); }
   function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
 
   var style = document.createElement("style");
@@ -5672,6 +5674,51 @@ hot sauce</p>
   ppanel.addEventListener("click", function (e) { if (e.target === ppanel) ppanel.classList.remove("show"); });
   ppanel.querySelector("[data-pclose]").addEventListener("click", function () { ppanel.classList.remove("show"); });
   window.TYDRerender = function (card) { renderCard(card); };
+
+  // Account sync for the grocery list and meal plan: when a visitor is
+  // logged into their Pond Account, both merge with their account copies
+  // and every change is pushed, so the lists follow them across devices.
+  var cookUid = null, cookFs = null, cookPushT = null, cookMerged = false;
+  function scheduleCookPush() {
+    if (!cookUid || !cookFs) return;
+    clearTimeout(cookPushT);
+    cookPushT = setTimeout(pushCook, 900);
+  }
+  function pushCook() {
+    if (!cookUid || !cookFs) return;
+    cookFs.setDoc(cookFs.doc(cookFs.db, "users", cookUid), { groceryList: grocery(), mealPlan: plan() }, { merge: true }).catch(function () {});
+  }
+  (function initCookSync() {
+    var cfg = { apiKey: "AIzaSyDoy5WjnhDlBqZaqZDUFkX6XodiXvQmr7I", authDomain: "treatyourselfdiscounts-881a9.firebaseapp.com", projectId: "treatyourselfdiscounts-881a9", storageBucket: "treatyourselfdiscounts-881a9.firebasestorage.app", messagingSenderId: "635205549581", appId: "1:635205549581:web:698e046036b14f33f81f44" };
+    Promise.all([
+      import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js"),
+      import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js"),
+      import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js")
+    ]).then(function (mods) {
+      var app;
+      try { app = mods[0].getApp(); } catch (e) { app = mods[0].initializeApp(cfg); }
+      var auth = mods[1].getAuth(app);
+      var db = mods[2].getFirestore(app);
+      cookFs = { setDoc: mods[2].setDoc, doc: mods[2].doc, db: db };
+      mods[1].onAuthStateChanged(auth, function (user) {
+        if (!user || cookMerged) { if (!user) { cookUid = null; } return; }
+        cookUid = user.uid; cookMerged = true;
+        mods[2].getDoc(mods[2].doc(db, "users", user.uid)).then(function (snap) {
+          var data = snap.exists() ? snap.data() : {};
+          var remoteG = data.groceryList || [], localG = grocery();
+          var gids = {}, mergedG = remoteG.slice();
+          remoteG.forEach(function (i) { gids[i.id] = 1; });
+          localG.forEach(function (i) { if (!gids[i.id]) mergedG.push(i); });
+          var remoteP = data.mealPlan || {}, localP = plan(), mergedP = {};
+          Object.keys(remoteP).forEach(function (k) { mergedP[k] = remoteP[k]; });
+          Object.keys(localP).forEach(function (k) { mergedP[k] = localP[k]; });
+          save(GKEY, mergedG); save(PKEY, mergedP);
+          updatePill(); updatePlanCount(); renderGrocery(); renderPlan();
+          pushCook();
+        }).catch(function () {});
+      });
+    }).catch(function () {});
+  })();
   updatePlanCount();
 })();
 
@@ -5767,5 +5814,6 @@ hot sauce</p>
 
 </script>
 <script type="module" src="auth-pill.js"></script>
+<script src="site-nav.js"></script>
 </body>
 </html>

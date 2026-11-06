@@ -255,6 +255,7 @@ if (typeof window !== "undefined" && typeof document !== "undefined") {
     createList: createList, deleteList: deleteList, onListsChange: onListsChange,
     itemId: itemId, countItems: countItems
   };
+  window.TYDOpenSave = openPicker;
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
   else init();
 }

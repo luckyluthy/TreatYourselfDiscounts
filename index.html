@@ -90,6 +90,20 @@
   .account-bar .ab-who { font-size: 12.5px; color: #3f6b7a; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px; }
   .ab-btn { display: inline-block; background: #1f5f74; color: #fff; font-weight: 800; font-size: 13px; text-decoration: none; border: none; cursor: pointer; font-family: inherit; border-radius: 999px; padding: 7px 14px; white-space: nowrap; }
   .ab-btn.ab-alt { background: #fff3b0; color: #6b5900; }
+
+  .topdeals { margin: 20px 0 4px; }
+  .td-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .topdeals h2 { margin: 0; font-size: 21px; color: #1f5f74; }
+  .td-search { color: #1f5f74; font-weight: 800; font-size: 13.5px; text-decoration: none; }
+  .td-sub { color: #3f6b7a; font-size: 13.5px; line-height: 1.5; margin: 6px 0 12px; }
+  .tdgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(158px, 1fr)); gap: 10px; }
+  .tdcard { background: #fff; border-radius: 14px; padding: 10px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 2px 6px rgba(35,65,77,.08); }
+  .tdcard img { width: 100%; height: 108px; object-fit: cover; border-radius: 10px; background: #eaf7fb; display: block; margin-bottom: 6px; }
+  .tdbrand { font-size: 10.5px; font-weight: 800; color: #8a7a2e; text-transform: uppercase; letter-spacing: .5px; }
+  .tdname { font-weight: 700; font-size: 14px; line-height: 1.3; margin-top: 2px; }
+  .tdoffer { color: #1e5c33; font-weight: 700; font-size: 13px; margin-top: 3px; line-height: 1.35; }
+  .tdsave { background: #fff3b0; border: none; border-radius: 999px; padding: 6px 11px; font-weight: 800; font-size: 12px; cursor: pointer; color: #6b5900; font-family: inherit; display: inline-block; }
+  .td-load { color: #3f6b7a; font-size: 14px; grid-column: 1 / -1; }
 </style>
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -201,6 +215,11 @@
       <span class="info"><span class="name">Zawina Morocco</span><br><span class="offer">Moroccan Skincare</span></span>
       <span class="arrow" aria-hidden="true">&#8250;</span>
     </a>
+    <section class="topdeals" id="topdeals">
+      <div class="td-head"><h2>🔥 Today's Top Deals</h2><a class="td-search" href="search.html">Search the whole Pond &#8250;</a></div>
+      <p class="td-sub">The strongest live deals from every brand, gathered in one spot and kept fresh by the daily deal check. Tap a deal to shop it, or save it to your own list. Prices can change at the store.</p>
+      <div class="tdgrid" id="tdgrid"><p class="td-load">Rounding up today's deals...</p></div>
+    </section>
     <details id="postpartum" open><summary><span class="section-title">Postpartum Picks</span><span class="chev">▾</span></summary>
     <a class="card" href="https://www.amazon.com/dp/B0CPL9CTT8?tag=treatyour09a8-20" target="_blank" rel="noopener">
       <span class="info"><span class="name">Perelel</span><br><span class="offer">$58.76 · Amazon</span></span>
@@ -357,6 +376,8 @@
   });
 </script>
 <script type="module" src="lists.js"></script>
+<script src="top-deals.js"></script>
 <script data-goatcounter="https://treatyourselfdiscounts.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+<script src="site-nav.js"></script>
 </body>
 </html>
