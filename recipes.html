@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#ffd94d">
-<meta name="description" content="TYD's Kitchen: the homemade favorites behind TreatYourselfDiscounts, churned ice cream, fermented root beer, and chicken wraps.">
-<title>TYD's Kitchen | TreatYourselfDiscounts</title>
+<meta name="description" content="Lucy's Recipes: the homemade favorites behind TreatYourselfDiscounts, churned ice cream, fermented root beer, and chicken wraps.">
+<title>Lucy's Recipes | TreatYourselfDiscounts</title>
 <style>
   * { box-sizing: border-box; }
   body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #d9f0f7; color: #23414d; }
@@ -55,9 +55,9 @@
   <div style="text-align:right; margin-top:8px;"><a href="account.html" style="display:inline-block; background:#1f5f74; color:#fff; font-weight:800; font-size:13px; text-decoration:none; border-radius:999px; padding:8px 15px;">🦆 Pond Account · Log in / Sign up</a></div>
 
   <header class="top">
-    <h1>🍦 TYD's Kitchen</h1>
+    <h1>🍦 Lucy's Recipes</h1>
     <p class="sub">The homemade favorites at the Pond. Simple, cozy, and made from scratch.</p>
-    <p class="note">These are TYD's Kitchen starter versions of the Pond favorites, written for this page, so there are no source websites to link yet. When a recipe here comes from a website, its source link will sit right on its card. Send over the real recipes any time and they will be swapped in word for word.</p>
+    <p class="note">These are Lucy's Recipes starter versions of the Pond favorites, written for this page, so there are no source websites to link yet. When a recipe here comes from a website, its source link will sit right on its card. Send over the real recipes any time and they will be swapped in word for word.</p>
   </header>
 
   <div class="savedbar" id="savedbar"><b>🔖 Your saved recipes:</b> <span id="savedlist"></span></div>
@@ -179,7 +179,7 @@
     b.addEventListener("click", function () {
       var id = b.getAttribute("data-share");
       var url = location.origin + location.pathname + "#" + id;
-      var data = { title: NAMES[id] + " | TYD's Kitchen", text: NAMES[id] + ", from TYD's Kitchen at the Pond.", url: url };
+      var data = { title: NAMES[id] + " | Lucy's Recipes", text: NAMES[id] + ", from Lucy's Recipes at the Pond.", url: url };
       if (navigator.share) { navigator.share(data).catch(function () {}); }
       else if (navigator.clipboard) {
         navigator.clipboard.writeText(url).then(function () { b.textContent = "✅ Link copied"; setTimeout(function () { b.textContent = "📤 Share recipe"; }, 1800); });
