@@ -84,6 +84,12 @@
   .play-banner .play-text b { display: block; font-size: 16.5px; }
   .play-banner .play-text span { font-size: 13px; color: #3f6b7a; }
   .play-banner .play-arrow { font-size: 24px; color: #1f5f74; }
+  .account-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 12px 16px 0; background: #fff; border: 2px solid #ffe066; border-radius: 999px; padding: 7px 8px 7px 15px; box-shadow: 0 2px 8px rgba(35,65,77,.08); }
+  .account-bar .ab-label { font-weight: 800; font-size: 13.5px; color: #1f5f74; white-space: nowrap; }
+  .account-bar .ab-state { display: flex; align-items: center; gap: 7px; min-width: 0; }
+  .account-bar .ab-who { font-size: 12.5px; color: #3f6b7a; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px; }
+  .ab-btn { display: inline-block; background: #1f5f74; color: #fff; font-weight: 800; font-size: 13px; text-decoration: none; border: none; cursor: pointer; font-family: inherit; border-radius: 999px; padding: 7px 14px; white-space: nowrap; }
+  .ab-btn.ab-alt { background: #fff3b0; color: #6b5900; }
 </style>
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -94,6 +100,10 @@
 </head>
 <body>
 <div class="app">
+  <div class="account-bar">
+    <span class="ab-label">🦆 Pond Account</span>
+    <span class="ab-state" id="ab-state"><a class="ab-btn" href="account.html">Log in</a><a class="ab-btn ab-alt" href="account.html">Sign up free</a></span>
+  </div>
   <header>
     <h1 class="sr-only">TreatYourselfDiscounts</h1>
     <p class="sr-only">Welcome to the Pond! Verified deals and discount links, all in one place.</p>
@@ -322,6 +332,29 @@
   searchInput.addEventListener('input', applyFilters);
   categorySelect.addEventListener('change', applyFilters);
   sortSelect.addEventListener('change', applyFilters);
+</script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  var firebaseConfig = {
+    apiKey: "AIzaSyDoy5WjnhDlBqZaqZDUFkX6XodiXvQmr7I",
+    authDomain: "treatyourselfdiscounts-881a9.firebaseapp.com",
+    projectId: "treatyourselfdiscounts-881a9",
+    storageBucket: "treatyourselfdiscounts-881a9.firebasestorage.app",
+    messagingSenderId: "635205549581",
+    appId: "1:635205549581:web:698e046036b14f33f81f44"
+  };
+  var auth = getAuth(initializeApp(firebaseConfig));
+  var state = document.getElementById("ab-state");
+  onAuthStateChanged(auth, function (user) {
+    if (!state) return;
+    if (user) {
+      state.innerHTML = '<span class="ab-who">' + user.email + '</span><a class="ab-btn" href="account.html">My Account</a><button class="ab-btn ab-alt" id="ab-logout" type="button">Log out</button>';
+      document.getElementById("ab-logout").addEventListener("click", function () { signOut(auth); });
+    } else {
+      state.innerHTML = '<a class="ab-btn" href="account.html">Log in</a><a class="ab-btn ab-alt" href="account.html">Sign up free</a>';
+    }
+  });
 </script>
 <script data-goatcounter="https://treatyourselfdiscounts.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
