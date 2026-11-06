@@ -73,7 +73,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
   import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
   var firebaseConfig = {
     apiKey: "AIzaSyDoy5WjnhDlBqZaqZDUFkX6XodiXvQmr7I",
@@ -110,7 +110,10 @@
     var c = creds();
     if (!c.email || !c.pw) { showStatus("Please fill in both your email and a password first."); return; }
     createUserWithEmailAndPassword(auth, c.email, c.pw)
-      .then(function () { showStatus("Your Pond account is created. Welcome in!", true); })
+      .then(function (cred) {
+        showStatus("Your Pond account is created. Welcome in!", true);
+        setDoc(doc(db, "users", cred.user.uid), { email: cred.user.email, joinedAt: serverTimestamp() }, { merge: true }).catch(function () {});
+      })
       .catch(function (e) { showStatus(friendly(e)); });
   });
   $("login").addEventListener("click", function () {
@@ -149,6 +152,7 @@
   }
   onAuthStateChanged(auth, function (user) {
     if (user) {
+      setDoc(doc(db, "users", user.uid), { email: user.email }, { merge: true }).catch(function () {});
       $("auth-card").style.display = "none";
       $("account-card").style.display = "block";
       $("who").textContent = user.email;

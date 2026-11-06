@@ -54,6 +54,16 @@
   .summary div { padding: 5px 0; border-bottom: 1px dashed #e8d5b5; }
   .summary b { color: #5b3a1e; }
   .btn { display: block; width: 100%; border: none; cursor: pointer; font-family: inherit; font-weight: 800; font-size: 14.5px; border-radius: 999px; padding: 11px; margin-top: 10px; background: #f3e9d4; color: #5b3a1e; }
+  .members { margin-top: 26px; background: #fff; border: 2px solid #bcd9e4; border-radius: 16px; padding: 18px; }
+  .members h2 { margin: 0 0 6px; color: #1f5f74; font-size: 19px; }
+  .members p { font-size: 14px; line-height: 1.5; margin: 6px 0; }
+  .members input { width: 100%; border: 2px solid #bcd9e4; border-radius: 12px; padding: 10px 12px; font-size: 14.5px; font-family: inherit; margin-top: 8px; box-sizing: border-box; }
+  .mbtn { border: none; cursor: pointer; font-family: inherit; font-weight: 800; font-size: 14px; border-radius: 999px; padding: 10px 18px; margin-top: 10px; background: #1f5f74; color: #fff; }
+  .mbtn.alt { background: #fff3b0; color: #6b5900; }
+  .mrow { border-top: 1.5px dashed #d7e6ec; padding: 10px 0; font-size: 14px; }
+  .mrow b { color: #1f5f74; }
+  .mrow .saves { color: #3f6b7a; font-size: 13px; line-height: 1.5; }
+  .merr { color: #8c2b2b; font-size: 13.5px; margin-top: 8px; display: none; }
   .status { margin-top: 26px; background: #fff; border: 2px solid #e8d5b5; border-radius: 16px; padding: 18px; }
   .status h2 { margin-bottom: 6px; }
   .status li { margin-bottom: 7px; font-size: 14.5px; line-height: 1.45; }
@@ -221,6 +231,24 @@
       <div><b>1. Pick your covers</b>Hard covers click off and on the hinged spine.</div>
       <div><b>2. Fill it your way</b>Refill booklets slide in on elastics, plus a zip insert.</div>
       <div><b>3. Swap anytime</b>Every part is replaceable and customizable.</div>
+    </div>
+
+    <div class="members" id="members">
+      <h2>Everyone in the Pond</h2>
+      <p>Your member list in one place: everyone with a Pond account, when they joined, and the recipes they have saved. Sign in here with your own Pond account. Only the owner account can open this list, anyone else gets turned away by the database itself.</p>
+      <div id="owner-login">
+        <input type="email" id="owner-email" placeholder="Your Pond account email" autocomplete="email">
+        <input type="password" id="owner-pw" placeholder="Your Pond account password" autocomplete="current-password">
+        <button class="mbtn" id="owner-signin">Sign in to see everyone</button>
+        <div class="merr" id="owner-err"></div>
+        <p style="font-size:13px; color:#5b7d89;">No Pond account of your own yet? Make one first on the Pond Account page, then tell Goose, who flips the owner switch for your account.</p>
+      </div>
+      <div id="owner-view" style="display:none;">
+        <p id="owner-count" style="font-weight:800; color:#1f5f74;"></p>
+        <div id="owner-list"></div>
+        <button class="mbtn alt" id="owner-refresh">Refresh list</button>
+        <button class="mbtn alt" id="owner-signout">Sign out</button>
+      </div>
     </div>
 
     <div class="status">
@@ -507,6 +535,59 @@
   document.getElementById('prev').addEventListener('click', function () { flipTo(currentPos - 1); });
   document.getElementById('next').addEventListener('click', function () { flipTo(currentPos + 1); });
   render();
+</script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  var firebaseConfig = {
+    apiKey: "AIzaSyDoy5WjnhDlBqZaqZDUFkX6XodiXvQmr7I",
+    authDomain: "treatyourselfdiscounts-881a9.firebaseapp.com",
+    projectId: "treatyourselfdiscounts-881a9",
+    storageBucket: "treatyourselfdiscounts-881a9.firebasestorage.app",
+    messagingSenderId: "635205549581",
+    appId: "1:635205549581:web:698e046036b14f33f81f44"
+  };
+  var NAMES = { "recipe-ice-cream": "Churned Vanilla Ice Cream", "recipe-root-beer": "Fermented Root Beer", "recipe-chicken-wraps": "Chicken Wraps" };
+  var auth = getAuth(initializeApp(firebaseConfig));
+  var db = getFirestore();
+  function $(id) { return document.getElementById(id); }
+  function showErr(msg) { var e = $("owner-err"); e.textContent = msg; e.style.display = "block"; }
+  function loadMembers() {
+    getDocs(collection(db, "users")).then(function (snap) {
+      var rows = [];
+      snap.forEach(function (d) { var v = d.data() || {}; rows.push({ email: v.email || "", joined: v.joinedAt, saves: v.savedRecipes || [] }); });
+      rows.sort(function (a, b) { return (a.email || "zzz").localeCompare(b.email || "zzz"); });
+      $("owner-count").textContent = rows.length + (rows.length === 1 ? " member" : " members") + " in the Pond";
+      if (!rows.length) { $("owner-list").innerHTML = '<p style="color:#5b7d89;">Nobody has signed up yet. When the first member joins, they will appear here.</p>'; return; }
+      $("owner-list").innerHTML = rows.map(function (r) {
+        var when = "";
+        try { if (r.joined && r.joined.toDate) when = " · joined " + r.joined.toDate().toLocaleDateString(); } catch (e) {}
+        var saves = r.saves.length ? r.saves.map(function (id) { return NAMES[id] || id; }).join(", ") : "nothing saved yet";
+        return '<div class="mrow"><b>' + (r.email || "Member (no email on file)") + '</b>' + when + '<div class="saves">Saved recipes: ' + saves + '</div></div>';
+      }).join("");
+    }).catch(function (err) {
+      if (err && err.code === "permission-denied") {
+        $("owner-count").textContent = "";
+        $("owner-list").innerHTML = '<p style="color:#8c2b2b;">This Pond account is not the owner account, so the member list stays closed. Sign out and sign in with Lucy\'s own Pond account.</p>';
+      } else {
+        $("owner-list").innerHTML = '<p style="color:#8c2b2b;">The member list could not load just now. Try Refresh in a moment.</p>';
+      }
+    });
+  }
+  $("owner-signin").addEventListener("click", function () {
+    var email = $("owner-email").value.trim(), pw = $("owner-pw").value;
+    if (!email || !pw) { showErr("Fill in your Pond account email and password first."); return; }
+    $("owner-err").style.display = "none";
+    signInWithEmailAndPassword(auth, email, pw).catch(function () { showErr("That email and password do not match a Pond account. Check them and try again."); });
+  });
+  $("owner-signout").addEventListener("click", function () { signOut(auth); });
+  $("owner-refresh").addEventListener("click", function () { loadMembers(); });
+  onAuthStateChanged(auth, function (user) {
+    $("owner-login").style.display = user ? "none" : "block";
+    $("owner-view").style.display = user ? "block" : "none";
+    if (user) loadMembers();
+  });
 </script>
 </body>
 </html>
