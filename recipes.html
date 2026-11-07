@@ -5297,15 +5297,63 @@ hot sauce</p>
     + ".plspin{height:36px;border-radius:999px;border:2px solid #e3c93f;background:#ffd94d;color:#6b5900;font-size:13.5px;font-weight:900;cursor:pointer;font-family:inherit;padding:0 13px;}"
     + ".plspin:disabled{opacity:.55;cursor:default;}"
     + ".plbody{padding:2px 10px 12px;}"
-    + ".plbody .recipe-card{margin-top:10px;}"
-    + ".ctrack{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding:6px 2px 12px;align-items:flex-start;}"
-    + ".ctrack .recipe-card{flex:0 0 min(86%,430px);scroll-snap-align:center;margin-top:0;}"
+    + ".ctrack{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding:6px 2px 10px;align-items:flex-start;}"
     + ".ctrack.dragging{scroll-snap-type:none;cursor:grabbing;}"
-    + ".plpick{background:#fff3b0;border:2px solid #ffd94d;color:#6b5900;border-radius:10px;padding:8px 12px;font-size:14.5px;margin:6px 0 2px;}"
-    + ".picked{outline:4px solid #ffd94d;outline-offset:2px;}"
+    + ".tile{flex:0 0 118px;scroll-snap-align:center;background:#fff;border:2px solid #bcd9e4;border-radius:12px;padding:0;overflow:hidden;cursor:pointer;font-family:inherit;text-align:left;}"
+    + ".tile .timg{display:block;height:80px;background-color:#eaf7fb;background-position:center;background-size:cover;background-repeat:no-repeat;}"
+    + ".tile .timg.temoji{display:flex;align-items:center;justify-content:center;font-size:30px;}"
+    + ".tile .tname{display:block;padding:6px 8px 8px;font-size:12.5px;font-weight:800;color:#1f5f74;line-height:1.3;}"
+    + ".tile.picked{outline:4px solid #ffd94d;outline-offset:2px;}"
+    + ".plpick{background:#fff3b0;border:2px solid #ffd94d;color:#6b5900;border-radius:10px;padding:8px 12px;font-size:14.5px;margin:6px 0 2px;cursor:pointer;}"
+    + ".rgrid{display:flex;flex-wrap:wrap;gap:10px;padding-top:8px;}"
     + ".surprise{display:block;width:100%;margin:12px 0 4px;background:#ffd94d;border:2px solid #e3c93f;color:#6b5900;font-family:inherit;font-weight:900;font-size:16px;border-radius:14px;padding:13px;cursor:pointer;}"
-    + "@media print{.plbody{display:block !important;}.ctrack{display:block;overflow:visible;}.ctrack .recipe-card{margin-bottom:12px;}}";
+    + ".detail{position:fixed;inset:0;background:rgba(10,25,32,.55);z-index:10000;display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:14px;}"
+    + ".dbox{background:#fdfbf5;border-radius:16px;max-width:640px;width:100%;padding:10px 12px 18px;box-shadow:0 12px 40px rgba(0,0,0,.35);}"
+    + ".dx{display:block;margin:0 0 6px auto;background:#1f5f74;color:#fff;border:none;border-radius:999px;padding:8px 15px;font-weight:800;font-size:13.5px;cursor:pointer;font-family:inherit;}"
+    + "@media print{.detail{position:static;background:#fff;padding:0;}.dbox{box-shadow:none;max-width:none;}.dx{display:none;}}";
   document.head.appendChild(st);
+  var byId = {};
+  cards.forEach(function (c) { byId[c.id] = c; });
+  var pool = document.createElement("div");
+  pool.id = "cardpool"; pool.style.display = "none";
+  parent.appendChild(pool);
+  var detail = document.createElement("div");
+  detail.className = "detail"; detail.style.display = "none";
+  detail.innerHTML = '<div class="dbox"><button type="button" class="dx">\u2715 Close</button><div class="dslot"></div></div>';
+  document.body.appendChild(detail);
+  var dslot = detail.querySelector(".dslot"), curOpen = null;
+  function openDetail(card) {
+    if (!card) return;
+    if (curOpen && curOpen !== card) pool.appendChild(curOpen);
+    curOpen = card;
+    dslot.appendChild(card);
+    detail.style.display = "flex";
+    detail.scrollTop = 0;
+    document.body.style.overflow = "hidden";
+  }
+  function closeDetail() {
+    if (curOpen) { pool.appendChild(curOpen); curOpen = null; }
+    detail.style.display = "none";
+    document.body.style.overflow = "";
+  }
+  detail.querySelector(".dx").addEventListener("click", closeDetail);
+  detail.addEventListener("click", function (e) { if (e.target === detail) closeDetail(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeDetail(); });
+  window.TYDOpenRecipe = function (id) { openDetail(byId[id]); };
+  function makeTile(card) {
+    var t = document.createElement("button");
+    t.type = "button"; t.className = "tile"; t.setAttribute("data-for", card.id);
+    var im = card.querySelector("img"), src = im && im.getAttribute("src");
+    t.innerHTML = '<span class="timg"></span><span class="tname"></span>';
+    var ti = t.querySelector(".timg");
+    if (src) ti.style.backgroundImage = "url(\"" + src.replace(/"/g, "%22") + "\")";
+    else { ti.textContent = "\uD83C\uDF7D\uFE0F"; ti.classList.add("temoji"); }
+    var h = card.querySelector("h2");
+    t.querySelector(".tname").textContent = h ? h.textContent : card.id;
+    t.addEventListener("click", function () { openDetail(card); });
+    card._tile = t;
+    return t;
+  }
   var groups = {}, order = [];
   cards.forEach(function (card) {
     var home = (card.getAttribute("data-cats") || "Recipes").split("|")[0] || "Recipes";
@@ -5343,20 +5391,21 @@ hot sauce</p>
       ctrls.querySelector(".plprev").addEventListener("click", function () { step(sec, -1); });
       ctrls.querySelector(".plnext").addEventListener("click", function () { step(sec, 1); });
       sec._spinBtn.addEventListener("click", function () { spin(sec); });
+      pick.addEventListener("click", function () { if (sec._pickCard) openDetail(sec._pickCard); });
       dragScroll(track);
     }
     return sec;
   }
-  function trackCards(sec) { return Array.prototype.slice.call(sec._track.children); }
+  function trackTiles(sec) { return Array.prototype.slice.call(sec._track.children); }
   function goTo(sec, i, smooth) {
-    var list = trackCards(sec); if (!list.length) return;
+    var list = trackTiles(sec); if (!list.length) return;
     i = ((i % list.length) + list.length) % list.length;
     var c = list[i], track = sec._track;
     track.scrollTo({ left: c.offsetLeft - track.offsetLeft - (track.clientWidth - c.offsetWidth) / 2, behavior: smooth ? "smooth" : "auto" });
     sec._idx = i;
   }
   function curIdx(sec) {
-    var list = trackCards(sec); if (!list.length) return 0;
+    var list = trackTiles(sec); if (!list.length) return 0;
     var track = sec._track, mid = track.scrollLeft + track.clientWidth / 2, best = 0, bd = 1e18;
     list.forEach(function (c, i) {
       var cc = c.offsetLeft - track.offsetLeft + c.offsetWidth / 2, d = Math.abs(cc - mid);
@@ -5365,22 +5414,24 @@ hot sauce</p>
     return best;
   }
   function clearPick(sec) {
-    trackCards(sec).forEach(function (c) { c.classList.remove("picked"); });
-    if (sec._pick) sec._pick.style.display = "none";
+    trackTiles(sec).forEach(function (t) { t.classList.remove("picked"); });
+    if (sec._pick) { sec._pick.style.display = "none"; sec._pickCard = null; }
   }
   function step(sec, dir) { if (sec._spinning) return; clearPick(sec); goTo(sec, curIdx(sec) + dir, true); }
   function land(sec, i) {
-    var list = trackCards(sec), c = list[i]; if (!c) return;
+    var list = trackTiles(sec), tile = list[i]; if (!tile) return;
     list.forEach(function (x) { x.classList.remove("picked"); });
-    c.classList.add("picked");
-    var h = c.querySelector("h2");
-    sec._pick.innerHTML = "\uD83C\uDF89 Tonight's pick: <b></b>";
+    tile.classList.add("picked");
+    var card = byId[tile.getAttribute("data-for")];
+    sec._pickCard = card;
+    var h = card && card.querySelector("h2");
+    sec._pick.innerHTML = "\uD83C\uDF89 Tonight's pick: <b></b> \u00B7 tap to see the recipe";
     sec._pick.querySelector("b").textContent = h ? h.textContent : "Your recipe";
     sec._pick.style.display = "";
   }
   function spin(sec, targetIdx) {
     if (sec._spinning) return;
-    var list = trackCards(sec); if (!list.length) return;
+    var list = trackTiles(sec); if (!list.length) return;
     var n = list.length;
     var target = (typeof targetIdx === "number") ? ((targetIdx % n) + n) % n : Math.floor(Math.random() * n);
     clearPick(sec);
@@ -5428,7 +5479,7 @@ hot sauce</p>
     list.forEach(function (card) {
       var im = card.querySelector("img");
       if (!firstImg && im && im.getAttribute("src")) firstImg = im.getAttribute("src");
-      sec._track.appendChild(card);
+      sec._track.appendChild(makeTile(card));
     });
     sec._tog.querySelector(".plcount").textContent = list.length + (list.length === 1 ? " recipe" : " recipes");
     var th = sec._tog.querySelector(".plthumb");
@@ -5436,7 +5487,11 @@ hot sauce</p>
     sections[name] = sec;
     parent.insertBefore(sec, anchor);
   });
+  cards.forEach(function (card) { pool.appendChild(card); });
   var rsec = makeSection("Search results", false);
+  var rgrid = document.createElement("div"); rgrid.className = "rgrid";
+  rsec._body.appendChild(rgrid);
+  rsec._grid = rgrid;
   rsec.style.display = "none";
   sections.__results = rsec;
   parent.insertBefore(rsec, anchor);
@@ -5449,16 +5504,16 @@ hot sauce</p>
     var sec = sections[c.getAttribute("data-home")]; if (!sec) return;
     openSec(sec);
     sec.scrollIntoView({ block: "start" });
-    var idx = trackCards(sec).indexOf(c);
+    var idx = trackTiles(sec).indexOf(c._tile);
     setTimeout(function () { spin(sec, idx); }, 400);
   });
   var rcount = document.getElementById("rcount"), nomatch = document.getElementById("nomatch"),
       input = document.getElementById("recipesearch");
-  function setCountHome() { rcount.textContent = cards.length + " recipes in " + order.length + " categories. Open one to flip through its carousel, or hit Spin and let it choose."; }
+  function setCountHome() { rcount.textContent = cards.length + " recipes in " + order.length + " categories. Open one to flip through its carousel, tap a recipe to see it all, or hit Spin and let it choose."; }
   function restore() {
     cards.forEach(function (card) {
       var sec = sections[card.getAttribute("data-home")];
-      if (sec) (sec._track || sec._body).appendChild(card);
+      if (sec && card._tile) sec._track.appendChild(card._tile);
       card.classList.remove("hide");
     });
     Object.keys(sections).forEach(function (k) { if (k !== "__results") sections[k].style.display = ""; });
@@ -5474,7 +5529,7 @@ hot sauce</p>
     if (!q) { setCountHome(); if (order.length) openSec(sections[order[0]]); return; }
     var matches = cards.filter(function (c) { return (c.getAttribute("data-search") || "").indexOf(q) !== -1; });
     Object.keys(sections).forEach(function (k) { if (k !== "__results") sections[k].style.display = "none"; });
-    matches.forEach(function (c) { rsec._body.appendChild(c); });
+    matches.forEach(function (c) { rsec._grid.appendChild(c._tile); });
     rsec._tog.querySelector(".plname").textContent = "Results for \u201C" + input.value.trim() + "\u201D";
     rsec._tog.querySelector(".plcount").textContent = matches.length + (matches.length === 1 ? " recipe" : " recipes");
     rsec.style.display = "";
@@ -5485,11 +5540,11 @@ hot sauce</p>
   function openHash() {
     var id = (location.hash || "").replace(/^#/, "");
     if (!id) return;
-    var card = document.getElementById(id);
-    if (!card || !card.classList.contains("recipe-card")) return;
-    if (rsec.style.display !== "none" && rsec._body.contains(card)) openSec(rsec);
-    else { var sec = sections[card.getAttribute("data-home")]; if (sec) { openSec(sec); if (sec._track) goTo(sec, trackCards(sec).indexOf(card), false); } }
-    setTimeout(function () { card.scrollIntoView({ block: "start" }); }, 80);
+    var card = byId[id];
+    if (!card) return;
+    var sec = sections[card.getAttribute("data-home")];
+    if (sec) { openSec(sec); goTo(sec, trackTiles(sec).indexOf(card._tile), false); }
+    openDetail(card);
   }
   window.addEventListener("hashchange", openHash);
   openHash();
