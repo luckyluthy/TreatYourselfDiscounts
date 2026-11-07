@@ -36,6 +36,8 @@
   .sayline { margin-top: 12px; background: #1f5f74; color: #fff; border-radius: 12px; padding: 12px 14px; font-size: 15.5px; font-weight: 700; text-align: center; min-height: 24px; }
   .sayline small { display: block; font-weight: 600; font-size: 12.5px; color: #bfe6f2; margin-top: 2px; }
   .sayable { border-bottom: 2px dotted #1f5f74; cursor: pointer; font-weight: 700; }
+  .soundbtn { display: block; margin: 12px auto 0; background: #ffd94d; border: 2px solid #e3c93f; color: #6b5900; font-family: inherit; font-weight: 800; font-size: 14.5px; border-radius: 999px; padding: 9px 18px; cursor: pointer; }
+  .soundbtn.off { background: #eaf7fb; border-color: #bcd9e4; color: #1f5f74; }
   footer { margin-top: 26px; text-align: center; }
   .disc { font-size: 12px; color: #5b7d89; line-height: 1.5; max-width: 560px; margin: 10px auto 0; }
 </style>
@@ -59,7 +61,8 @@
   <div class="card">
     <h2>The 10 basic vowels</h2>
     <p><b>Tap any letter to hear it</b> and see how it sounds.</p>
-    <div class="sayline" id="sayline">🔊 Tap a letter or a word, and TYD's corner will say it out loud.<small>The sound uses your device's Korean voice, when it has one.</small></div>
+    <button type="button" class="soundbtn off" id="soundbtn">🔇 Sound: Off</button>
+    <div class="sayline" id="sayline">Tap a letter or a word to see how it is pronounced.<small>Sound starts off, so nothing plays by surprise. Tap the Sound button when you want to hear it.</small></div>
     <div class="vowels">
       <div class="vowel" data-say="아" data-show="ㅏ · A · sounds like 'ah', the a in father"><b>ㅏ</b><span>A</span></div>
       <div class="vowel" data-say="야" data-show="ㅑ · Ya · sounds like 'yah'"><b>ㅑ</b><span>Ya</span></div>
@@ -102,7 +105,24 @@
 <script>
 (function () {
   var line = document.getElementById("sayline");
+  var soundBtn = document.getElementById("soundbtn");
+  var soundOn = false;
+  try { soundOn = window.localStorage.getItem("tydKoreanSound") === "on"; } catch (e) { soundOn = false; }
+  function paintBtn() {
+    if (!soundBtn) return;
+    soundBtn.textContent = soundOn ? "\uD83D\uDD0A Sound: On" : "\uD83D\uDD07 Sound: Off";
+    soundBtn.classList.toggle("off", !soundOn);
+  }
+  paintBtn();
+  if (soundBtn) soundBtn.addEventListener("click", function () {
+    soundOn = !soundOn;
+    try { window.localStorage.setItem("tydKoreanSound", soundOn ? "on" : "off"); } catch (e) {}
+    if (!soundOn) { try { window.speechSynthesis.cancel(); } catch (e) {} }
+    paintBtn();
+    if (line) line.innerHTML = soundOn ? "Sound is on. Tap any letter or word to hear it." : "Sound is off. Taps will only show the pronunciation, nice and quiet." + "<small>Your choice is remembered on this device.</small>";
+  });
   function speak(text) {
+    if (!soundOn) return;
     try {
       if (!("speechSynthesis" in window)) return;
       window.speechSynthesis.cancel();
@@ -116,7 +136,7 @@
     el.setAttribute("role", "button");
     el.setAttribute("tabindex", "0");
     function go() {
-      if (line) line.innerHTML = el.getAttribute("data-show") + "<small>Playing out loud now, listen and repeat.</small>";
+      if (line) line.innerHTML = el.getAttribute("data-show") + (soundOn ? "<small>Playing out loud now, listen and repeat.</small>" : "<small>Sound is off, so this stayed quiet. Tap the Sound button to hear it.</small>");
       speak(el.getAttribute("data-say"));
     }
     el.addEventListener("click", go);
