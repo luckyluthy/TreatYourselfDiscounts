@@ -19,6 +19,8 @@
     + ".tyd-toast{bottom:172px !important;}"
     + "#tydinstall{position:fixed;inset:0;z-index:9999;background:rgba(35,65,77,.45);display:none;align-items:center;justify-content:center;padding:20px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;}"
     + "#tydinstall.show{display:flex;}"
+    + "#tydnav .spin .ic{display:inline-block;animation:tydspin 0.8s linear infinite;}"
+    + "@keyframes tydspin{to{transform:rotate(360deg);}}"
     + "#tydinstall .box{background:#fff;border-radius:18px;padding:22px;max-width:360px;width:100%;color:#23414d;}"
     + "#tydinstall h3{margin:0 0 8px;color:#1f5f74;font-size:18px;}"
     + "#tydinstall p{font-size:14.5px;line-height:1.55;margin:6px 0;}"
@@ -45,6 +47,22 @@
     a.innerHTML = '<span class="ic">' + it.ic + '</span>' + it.label;
     nav.appendChild(a);
   });
+  var refr = document.createElement("button");
+  refr.type = "button";
+  refr.innerHTML = '<span class="ic">↻</span>Refresh';
+  refr.addEventListener("click", function () {
+    if (refr.classList.contains("spin")) return;
+    refr.classList.add("spin");
+    var done = function () { location.reload(); };
+    var steps = [];
+    try {
+      if ("caches" in window) steps.push(caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k); })); }));
+      if ("serviceWorker" in navigator) steps.push(navigator.serviceWorker.getRegistration().then(function (reg) { if (reg) return reg.update(); }).catch(function () {}));
+    } catch (e) {}
+    Promise.all(steps).then(function () { setTimeout(done, 60); }).catch(function () { done(); });
+    setTimeout(done, 2500);
+  });
+  nav.appendChild(refr);
   var inst = document.createElement("button");
   inst.type = "button";
   inst.innerHTML = '<span class="ic">⬇️</span>App';
