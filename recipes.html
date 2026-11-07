@@ -5733,7 +5733,8 @@ hot sauce</p>
         base: baseServings(card),
         cur: baseServings(card),
         ing: Array.prototype.map.call(card.querySelectorAll("h3 + ul li, ul li"), function (li) { return li.textContent; }),
-        dir: Array.prototype.map.call(card.querySelectorAll("ol li"), function (li) { return li.textContent; })
+        dir: Array.prototype.map.call(card.querySelectorAll("ol li"), function (li) { return li.textContent; }),
+        name: card.querySelector("h2") ? card.querySelector("h2").textContent.trim() : card.id
       };
       // the ul right after the Ingredients h3 is the first ul in the card
       var uls = card.querySelectorAll("ul");
@@ -5772,7 +5773,7 @@ hot sauce</p>
       renderCard(card);
       var uls = card.querySelectorAll("ul");
       var items = uls.length ? Array.prototype.map.call(uls[0].querySelectorAll("li"), function (li) { return li.textContent; }) : [];
-      addGrocery(card.id, card.querySelector("h2").textContent, items);
+      addGrocery(card.id, st.name || card.querySelector("h2").textContent, items);
       this.classList.add("added"); this.textContent = "🛒 Added ✓";
       var b = this; setTimeout(function () { b.classList.remove("added"); b.textContent = "🛒 Add to grocery list"; }, 1600);
     });
@@ -6057,7 +6058,7 @@ hot sauce</p>
     btn.className = "cookbtn";
     btn.textContent = "🇰🇷 Korean";
     bar.appendChild(btn);
-    var on = false, busy = false, ko = null;
+    var on = false, busy = false, ko = null, orig = null;
     function parts() {
       var title = card.querySelector("h2");
       var desc = null;
@@ -6073,12 +6074,14 @@ hot sauce</p>
       if (on) {
         // back to English: re-render from the cook tools' originals if present
         on = false; btn.textContent = "🇰🇷 Korean"; btn.classList.remove("added");
+        if (orig) { if (P.title) P.title.textContent = orig.title; if (P.desc && orig.desc) P.desc.textContent = orig.desc; }
         if (window.TYDRerender) window.TYDRerender(card);
         else location.reload();
         return;
       }
       busy = true; btn.textContent = "Translating…";
       try {
+        if (!orig) orig = { title: P.title ? P.title.textContent : "", desc: P.desc ? P.desc.textContent : null };
         if (!ko) {
           var cache = loadCache();
           if (cache[card.id]) { ko = cache[card.id]; }
@@ -6667,6 +6670,118 @@ hot sauce</p>
     addMsg(q, "me");
     addMsg(answer(q), "bot");
     refreshCtx();
+  });
+})();
+
+</script>
+<script>
+(function () {
+  "use strict";
+  var css = [
+    ".ckbtn{margin-left:10px;border:2px solid #bcd9e4;background:#eaf7fb;color:#1f5f74;font-family:inherit;font-weight:800;font-size:11.5px;border-radius:999px;padding:3px 10px;cursor:pointer;vertical-align:middle;white-space:nowrap;}",
+    ".ckbtn.on{background:#1f5f74;color:#fff;border-color:#1f5f74;}",
+    "li.ckon{opacity:.6;}",
+    "li.ckon .cktxt{text-decoration:line-through;}",
+    "li.cknext{background:#fff6cf;border-radius:10px;box-shadow:inset 3px 0 0 #f0c93e;padding:2px 6px;}",
+    ".ckprog{flex-basis:100%;font-size:13px;font-weight:800;color:#1f5f74;padding-top:2px;}",
+    "@media print{.ckbtn,.ckstart,.ckprog{display:none !important;}}"
+  ].join("\n");
+  var st = document.createElement("style"); st.textContent = css; document.head.appendChild(st);
+  var states = {};
+  function ingLis(card) { var ul = card.querySelector("ul"); return ul ? Array.prototype.slice.call(ul.querySelectorAll("li")) : []; }
+  function dirLis(card) { return Array.prototype.slice.call(card.querySelectorAll("ol li")); }
+  function cleanupRow(li) {
+    var span = li.querySelector(".cktxt");
+    if (span) li.textContent = span.textContent;
+    li.classList.remove("ckon", "cknext");
+  }
+  function buildRow(card, li, idx, kind) {
+    var state = states[card.id];
+    var arr = kind === "ing" ? state.ingUsed : state.dirDone;
+    var text = li.textContent;
+    li.textContent = "";
+    var span = document.createElement("span");
+    span.className = "cktxt"; span.textContent = text;
+    li.appendChild(span);
+    var btn = document.createElement("button");
+    btn.type = "button"; btn.className = "ckbtn";
+    var paint = function () {
+      var on = !!arr[idx];
+      btn.textContent = on ? (kind === "ing" ? "✓ Used" : "✓ Done") : (kind === "ing" ? "Used" : "Done");
+      btn.classList.toggle("on", on);
+      li.classList.toggle("ckon", on);
+    };
+    btn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      arr[idx] = !arr[idx];
+      paint(); markNext(card); updateProgress(card);
+    });
+    li.appendChild(btn);
+    paint();
+  }
+  function markNext(card) {
+    var state = states[card.id]; if (!state) return;
+    var lis = dirLis(card);
+    lis.forEach(function (li) { li.classList.remove("cknext"); });
+    for (var i = 0; i < lis.length; i++) { if (!state.dirDone[i]) { lis[i].classList.add("cknext"); break; } }
+  }
+  function updateProgress(card) {
+    var state = states[card.id]; if (!state) return;
+    var prog = card.querySelector(".ckprog"); if (!prog) return;
+    var ni = ingLis(card).length, nd = dirLis(card).length;
+    var ui = Object.keys(state.ingUsed).filter(function (k) { return state.ingUsed[k]; }).length;
+    var dd = Object.keys(state.dirDone).filter(function (k) { return state.dirDone[k]; }).length;
+    prog.textContent = "Cooking: " + ui + " of " + ni + " ingredients used · " + dd + " of " + nd + " steps done" + (nd && dd === nd ? " · 🎉 All steps done, enjoy!" : "");
+  }
+  function buildAll(card) {
+    ingLis(card).forEach(function (li, i) { cleanupRow(li); buildRow(card, li, i, "ing"); });
+    dirLis(card).forEach(function (li, i) { cleanupRow(li); buildRow(card, li, i, "dir"); });
+    markNext(card); updateProgress(card);
+  }
+  function start(card, btn) {
+    states[card.id] = { ingUsed: {}, dirDone: {} };
+    card.dataset.cooking = "1";
+    btn.textContent = "⏹ Stop";
+    if (!card.querySelector(".ckprog")) {
+      var prog = document.createElement("div");
+      prog.className = "ckprog";
+      var bar = card.querySelector(".cookbar");
+      if (bar) bar.appendChild(prog);
+    }
+    buildAll(card);
+  }
+  function stop(card, btn) {
+    ingLis(card).forEach(cleanupRow);
+    dirLis(card).forEach(cleanupRow);
+    delete states[card.id];
+    delete card.dataset.cooking;
+    btn.textContent = "▶️ Start cooking";
+    var prog = card.querySelector(".ckprog");
+    if (prog) prog.remove();
+  }
+  document.querySelectorAll(".recipe-card").forEach(function (card) {
+    var bar = card.querySelector(".cookbar");
+    if (!bar || bar.querySelector(".ckstart")) return;
+    var btn = document.createElement("button");
+    btn.type = "button"; btn.className = "cookbtn ckstart";
+    btn.textContent = "▶️ Start cooking";
+    btn.addEventListener("click", function () {
+      if (card.dataset.cooking === "1") stop(card, btn); else start(card, btn);
+    });
+    bar.appendChild(btn);
+  });
+  // If servings change or the card re-renders while cooking, rebuild the
+  // toggles so the Used / Done state survives.
+  document.addEventListener("click", function (e) {
+    var t = e.target;
+    if (!t.closest) return;
+    var bar = t.closest(".cookbar");
+    if (!bar || t.closest(".ckbtn") || t.closest(".ckstart")) return;
+    var card = t.closest(".recipe-card");
+    if (card && card.dataset.cooking === "1") {
+      setTimeout(function () { if (card.dataset.cooking === "1") buildAll(card); }, 150);
+      setTimeout(function () { if (card.dataset.cooking === "1") buildAll(card); }, 1400);
+    }
   });
 })();
 
