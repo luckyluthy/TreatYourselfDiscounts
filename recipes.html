@@ -6419,6 +6419,15 @@ hot sauce</p>
     ".rhelp-form{display:flex;gap:6px;padding:10px;background:#fff;border-top:1px solid #e3eff4;}",
     ".rhelp-form input{flex:1;border:2px solid #bcd9e4;border-radius:12px;padding:10px;font-size:15px;font-family:inherit;min-width:0;}",
     ".rhelp-form button{background:#ffd94d;border:2px solid #e3c93f;color:#6b5900;font-family:inherit;font-weight:900;font-size:14px;border-radius:12px;padding:10px 14px;cursor:pointer;}",
+    ".rhelp-logbar{display:flex;gap:6px;padding:8px 10px;background:#fff;border-top:1px solid #e3eff4;}",
+    ".rlogbtn{border:2px solid #bcd9e4;background:#eaf7fb;color:#1f5f74;font-family:inherit;font-weight:800;font-size:12.5px;border-radius:999px;padding:5px 11px;cursor:pointer;}",
+    ".rhelp-log{display:none;max-height:190px;overflow-y:auto;padding:8px 12px;background:#f4fafc;border-top:1px solid #e3eff4;}",
+    ".rhelp-log.show{display:block;}",
+    ".rlogitem{padding:7px 0;border-bottom:1px solid #e3eff4;font-size:13.5px;color:#23414d;}",
+    ".rlogitem:last-child{border-bottom:none;}",
+    ".rlogitem .rq{font-weight:800;}",
+    ".rlogitem .rm{font-size:12px;color:#5b7a87;margin-top:1px;}",
+    ".rlogempty{font-size:13px;color:#5b7a87;}",
     "@media print{.rhelp-launch,.rhelp-teaser,.rhelp-panel{display:none !important;}}"
   ].join("\n");
   var st = document.createElement("style"); st.textContent = css; document.head.appendChild(st);
@@ -6456,10 +6465,46 @@ hot sauce</p>
     '<button class="rchip" data-chip="temp">🌡️ Oven temp</button>' +
     '<button class="rchip" data-chip="leftovers">🧊 Leftovers</button>' +
     "</div>" +
-    '<form class="rhelp-form"><input type="text" placeholder="Ask about this recipe..." aria-label="Ask about this recipe"><button type="submit">Send</button></form>';
+    '<form class="rhelp-form"><input type="text" placeholder="Ask about this recipe..." aria-label="Ask about this recipe"><button type="submit">Send</button></form>' +
+    '<div class="rhelp-logbar"><button type="button" class="rlogbtn" data-logtoggle>📜 Questions I have asked</button><button type="button" class="rlogbtn" data-logclear>Clear log</button></div>' +
+    '<div class="rhelp-log" data-log></div>';
   document.body.appendChild(panel);
   var msgs = panel.querySelector("[data-msgs]");
   var ctxEl = panel.querySelector("[data-ctx]");
+  var LOGKEY = "tydHelpLog";
+  var hlog = [];
+  try { hlog = JSON.parse(localStorage.getItem(LOGKEY) || "[]"); if (!Array.isArray(hlog)) hlog = []; } catch (e) { hlog = []; }
+  var logBox = panel.querySelector("[data-log]");
+  var logBtn = panel.querySelector("[data-logtoggle]");
+  function saveLog(notify) {
+    try { localStorage.setItem(LOGKEY, JSON.stringify(hlog)); } catch (e) {}
+    if (notify !== false && window.TYDHelpLogChanged) window.TYDHelpLogChanged(hlog);
+  }
+  function renderLog() {
+    if (logBtn) logBtn.textContent = "📜 Questions I have asked (" + hlog.length + ")";
+    if (!logBox) return;
+    if (!hlog.length) { logBox.innerHTML = '<div class="rlogempty">Nothing here yet. Ask the helper something and it will show up in this list.</div>'; return; }
+    logBox.innerHTML = hlog.slice().reverse().map(function (e) {
+      var when = "";
+      try { when = new Date(e.t).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }); } catch (x) {}
+      return '<div class="rlogitem"><div class="rq">' + esc(e.q) + '</div><div class="rm">' + esc(e.r ? e.r + " · " : "") + esc(when) + "</div></div>";
+    }).join("");
+  }
+  function logQ(q) {
+    var r = recipeData();
+    hlog.push({ q: q, r: r ? r.name : "", t: Date.now() });
+    if (hlog.length > 100) hlog = hlog.slice(-100);
+    saveLog();
+    renderLog();
+  }
+  window.TYDHelpLog = {
+    get: function () { return hlog; },
+    set: function (arr) { if (Array.isArray(arr)) { hlog = arr.slice(-100); saveLog(false); renderLog(); } }
+  };
+  if (logBtn) logBtn.addEventListener("click", function () { renderLog(); logBox.classList.toggle("show"); });
+  var clearBtn = panel.querySelector("[data-logclear]");
+  if (clearBtn) clearBtn.addEventListener("click", function () { hlog = []; saveLog(); renderLog(); if (logBox) logBox.classList.add("show"); });
+  renderLog();
   var input = panel.querySelector("input");
   var greeted = false, pending = null, lastId = null;
 
@@ -6698,6 +6743,7 @@ hot sauce</p>
       var r = recipeData();
       if (kind === "swap") {
         addMsg("Swap an ingredient", "me");
+        logQ("Swap an ingredient");
         if (!r) { addMsg("Open a recipe first, then tell me the ingredient. Or type any ingredient name now and I will give you the general swap.", "bot"); pending = "ingredient"; return; }
         addMsg("Which ingredient in " + r.name + " do you want to swap? Type its name, like butter or eggs.", "bot");
         pending = "ingredient";
@@ -6706,6 +6752,7 @@ hot sauce</p>
       }
       var label = chip.textContent;
       addMsg(label, "me");
+      logQ(label);
       if (kind === "dairy") addMsg(freeFromAnswer(r, DAIRY, "dairy"), "bot");
       else if (kind === "gluten") addMsg(freeFromAnswer(r, GLUTEN, "gluten"), "bot");
       else if (kind === "halve") addMsg(scaleAnswer(r, true), "bot");
@@ -6721,11 +6768,59 @@ hot sauce</p>
     if (!q.trim()) return;
     input.value = "";
     addMsg(q, "me");
+    logQ(q);
     addMsg(answer(q), "bot");
     refreshCtx();
   });
 })();
 
+</script>
+<script>
+(function () {
+  "use strict";
+  // Recipe Helper questions log syncs to the Pond Account as users/{uid}.helpLog,
+  // merged as a union by question + time, newest last, capped at 100.
+  var uid = null, fsx = null, pushT = null, merged = false;
+  function key(e) { return (e.q || "") + "|" + (e.t || 0); }
+  function schedulePush() {
+    if (!uid || !fsx) return;
+    clearTimeout(pushT);
+    pushT = setTimeout(function () {
+      if (!uid || !fsx || !window.TYDHelpLog) return;
+      fsx.setDoc(fsx.doc(fsx.db, "users", uid), { helpLog: window.TYDHelpLog.get() }, { merge: true }).catch(function () {});
+    }, 900);
+  }
+  window.TYDHelpLogChanged = schedulePush;
+  var cfg = { apiKey: "<redacted>", authDomain: "treatyourselfdiscounts-881a9.firebaseapp.com", projectId: "treatyourselfdiscounts-881a9", storageBucket: "treatyourselfdiscounts-881a9.firebasestorage.app", messagingSenderId: "635205549581", appId: "1:635205549581:web:698e046036b14f33f81f44" };
+  Promise.all([
+    import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js"),
+    import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js"),
+    import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js")
+  ]).then(function (mods) {
+    var app;
+    try { app = mods[0].getApp(); } catch (e) { app = mods[0].initializeApp(cfg); }
+    var auth = mods[1].getAuth(app);
+    var db = mods[2].getFirestore(app);
+    fsx = { setDoc: mods[2].setDoc, doc: mods[2].doc, db: db };
+    mods[1].onAuthStateChanged(auth, function (user) {
+      if (!user || merged) { if (!user) uid = null; return; }
+      uid = user.uid; merged = true;
+      mods[2].getDoc(mods[2].doc(db, "users", user.uid)).then(function (snap) {
+        var remote = (snap.exists() && snap.data().helpLog) || [];
+        if (!window.TYDHelpLog) return;
+        var seen = {}, out = [];
+        (window.TYDHelpLog.get() || []).concat(Array.isArray(remote) ? remote : []).forEach(function (e) {
+          if (!e || !e.q) return;
+          var k = key(e);
+          if (!seen[k]) { seen[k] = 1; out.push(e); }
+        });
+        out.sort(function (a, b) { return (a.t || 0) - (b.t || 0); });
+        window.TYDHelpLog.set(out);
+        schedulePush();
+      }).catch(function () {});
+    });
+  }).catch(function () {});
+})();
 </script>
 <script>
 (function () {
