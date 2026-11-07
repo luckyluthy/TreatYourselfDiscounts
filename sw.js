@@ -2,7 +2,7 @@
    stale. Navigations always try the network first and only fall back to
    the cache when offline, so a new site version shows on the next visit.
    Icons and the manifest may be cached; they change rarely. */
-const CACHE = "tyd-v7";
+const CACHE = "tyd-v8";
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();

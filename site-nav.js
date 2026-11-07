@@ -14,19 +14,19 @@
   var tydInk = "#q,.account-bar .ab-label,.actbtn,.alertrow a,.alertrow b,.back,a.back,.brand-row,.card a,.card h2,.card h3,.dashitem a,.fcdate,.fko,.foot-links a,.from,.hint-kicker,.item .title,.ken,.kko,.meta,.nest,.prefrow .prefgroup,.prefrow label,.quizmsg,.res .tt,.savedbar a,.section-title,.side-links a,.side-title,.social-row a,.tag,.td-search,.tile .tname,.topdeals h2,.vowel b,.win h2,.win-deals h3,.word .wrom,details > summary .chev,label";
   var tydCss = ""
     + "#tydthemebtn{position:fixed;top:calc(10px + env(safe-area-inset-top));right:12px;z-index:9995;border-radius:999px;border:2px solid #bcd9e4;background:rgba(255,255,255,.94);color:#1f5f74;font-weight:800;font-size:13px;padding:7px 13px;cursor:pointer;box-shadow:0 3px 10px rgba(35,65,77,.22);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;}"
-    + "html[data-theme=\"dark\"] body{background:#0b141f !important;color:#e8f1f7 !important;}"
+    + "html[data-theme=\"dark\"] body{background:#0b141f !important;color:#f8fdff !important;}"
     + "html[data-theme=\"dark\"] " + tydSurf.split(",").join(",html[data-theme=\"dark\"] ") + "{background:#172635 !important;border-color:#2e4a5f !important;}"
-    + "html[data-theme=\"dark\"] " + tydInk.split(",").join(",html[data-theme=\"dark\"] ") + "{color:#d9ecf5 !important;}"
-    + "html[data-theme=\"dark\"] h1{color:#9fd8ec !important;}"
-    + "html[data-theme=\"dark\"] footer{color:#9db8c6 !important;}"
-    + "html[data-theme=\"dark\"] input:not([type=\"checkbox\"]):not([type=\"radio\"]):not([type=\"range\"]),html[data-theme=\"dark\"] select,html[data-theme=\"dark\"] textarea{background:#101e2c !important;color:#e8f1f7 !important;border-color:#33536b !important;}"
-    + "html[data-theme=\"dark\"] ::placeholder{color:#7d99ab !important;}"
+    + "html[data-theme=\"dark\"] " + tydInk.split(",").join(",html[data-theme=\"dark\"] ") + "{color:#eefaff !important;}"
+    + "html[data-theme=\"dark\"] h1{color:#c9f0fc !important;}"
+    + "html[data-theme=\"dark\"] footer{color:#d7ecf5 !important;}"
+    + "html[data-theme=\"dark\"] input:not([type=\"checkbox\"]):not([type=\"radio\"]):not([type=\"range\"]),html[data-theme=\"dark\"] select,html[data-theme=\"dark\"] textarea{background:#101e2c !important;color:#f8fdff !important;border-color:#33536b !important;}"
+    + "html[data-theme=\"dark\"] ::placeholder{color:#bcd6e4 !important;}"
     + "html[data-theme=\"dark\"] th,html[data-theme=\"dark\"] td{border-color:#2c465a !important;}"
     + "html[data-theme=\"dark\"] #tydnav{background:rgba(13,24,36,.97) !important;border-top-color:#2c465a !important;}"
-    + "html[data-theme=\"dark\"] #tydnav a,html[data-theme=\"dark\"] #tydnav button{color:#9db8c6 !important;}"
+    + "html[data-theme=\"dark\"] #tydnav a,html[data-theme=\"dark\"] #tydnav button{color:#d7ecf5 !important;}"
     + "html[data-theme=\"dark\"] #tydnav .on{color:#ffd94d !important;}"
-    + "html[data-theme=\"dark\"] #tydinstall .box{background:#172635 !important;color:#e8f1f7 !important;}"
-    + "html[data-theme=\"dark\"] #tydinstall h3{color:#9fd8ec !important;}"
+    + "html[data-theme=\"dark\"] #tydinstall .box{background:#172635 !important;color:#f8fdff !important;}"
+    + "html[data-theme=\"dark\"] #tydinstall h3{color:#c9f0fc !important;}"
     + "html[data-theme=\"dark\"] #tydthemebtn{background:rgba(16,30,44,.94);border-color:#33536b;color:#ffd94d;}";
   var tydSt = document.createElement("style");
   tydSt.id = "tydthemecss";
