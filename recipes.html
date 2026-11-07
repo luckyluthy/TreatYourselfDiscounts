@@ -5265,6 +5265,11 @@ hot sauce</p>
 .mkitem button{border:1.5px solid #cfe3ea;background:#f7fbfc;border-radius:999px;padding:5px 12px;font-weight:700;cursor:pointer}
 .mkitem button.del{border-color:#f0c0c0;background:#fdf3f3;color:#a33}
 #mkphoto_prev{max-width:140px;border-radius:10px;display:none;margin-top:8px}
+.mkvisrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
+.mkvis{border:1.5px solid #cfe3ea;border-radius:999px;padding:8px 14px;font-weight:700;cursor:pointer;background:#fff}
+.mkvis input{margin-right:6px}
+.mkbadge{font-size:12px;font-weight:800;border-radius:999px;padding:3px 9px;white-space:nowrap}
+.mkbadge.pub{background:#dff3e4;color:#256b33}.mkbadge.priv{background:#eef3f5;color:#5b7a87}
 </style>
 <script>
 (function () {
@@ -5295,13 +5300,16 @@ hot sauce</p>
     h += "<h3>Directions</h3><ol>" + (r.dir || []).map(function (d) { return "<li>" + esc(d) + "</li>"; }).join("") + "</ol>";
     if (r.notes) h += "<h3>Notes</h3><p>" + esc(r.notes).replace(/\n/g, "<br>") + "</p>";
     if (r.nut && r.nut.length) h += '<h3>Nutrition (per serving)</h3><p class="note">' + esc(r.nut.join(" · ")) + "</p>";
+    if (r.sharedBy) {
+      h += '<p class="note">Shared by ' + esc(r.sharedBy) + ' in the Pond community cookbook.</p>';
+    }
     var src = (r.source || "").trim();
     if (/^https?:\/\//i.test(src)) {
       var host = src.replace(/^https?:\/\//i, "").split("/")[0];
       h += '<p class="note">Recipe from: <a href="' + esc(src) + '" target="_blank" rel="noopener">' + esc(host) + '</a>, saved in Lucy\'s cookbook.</p>';
-    } else if (src) {
+    } else if (src && !r.sharedBy) {
       h += '<p class="note">Recipe from: ' + esc(src) + ".</p>";
-    } else {
+    } else if (!r.sharedBy) {
       h += '<p class="note">Lucy\'s own recipe, from her kitchen notebook.</p>';
     }
     h += '<div class="actions"><button class="actbtn" data-share="' + r.id + '">📤 Share recipe</button> <button class="actbtn" data-save="' + r.id + '">🔖 Save recipe</button> <button class="actbtn" data-print="' + r.id + '">🖨️ Print recipe</button></div>';
@@ -5322,6 +5330,7 @@ hot sauce</p>
     injectedIds[r.id] = 1;
   });
   window.__mrInjectedIds = injectedIds;
+  window.TYDCardHTML = cardHTML;
   // 2) Sync surface for the Pond Account module.
   window.TYDMyRecipes = {
     get: load,
@@ -5355,6 +5364,11 @@ hot sauce</p>
     '<label for="mk_notes">Notes</label><textarea id="mk_notes" rows="2"></textarea>' +
     '<label for="mk_nut">Nutrition, one item per line</label><textarea id="mk_nut" rows="2" placeholder="Calories: 200&#10;Protein: 12"></textarea>' +
     '<label for="mk_src">Source (a website link, or words like: Grandma\'s cookbook)</label><input type="text" id="mk_src">' +
+    '<label for="mk_byline">Your name to show if you share it (optional)</label><input type="text" id="mk_byline" placeholder="Like: Lucy">' +
+    '<label>Who can see this recipe?</label><div class="mkvisrow">' +
+    '<label class="mkvis"><input type="radio" name="mk_vis" value="private" checked> 🔒 Private, only me</label>' +
+    '<label class="mkvis"><input type="radio" name="mk_vis" value="public"> 🌎 Public, share on the site</label></div>' +
+    '<p class="mkintro" style="margin-top:6px">Private recipes stay in your own cookbook. Public recipes appear in the Shared by the Pond section below for anyone who visits the site. Sharing works when you are signed in to your Pond Account.</p>' +
     '<div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap"><button type="button" class="mkbtn" id="mk_save">Save recipe</button><button type="button" class="mkbtn ghost" id="mk_cancel" style="display:none">Cancel edit</button></div>' +
     '<p class="mkstatus" id="mk_status"></p>' +
     '<div id="mk_mine"></div>';
@@ -5369,8 +5383,10 @@ hot sauce</p>
     var box = $("mk_mine");
     if (!mine.length) { box.innerHTML = ""; return; }
     box.innerHTML = "<h3 style='margin:14px 0 4px'>Your recipes (" + mine.length + ")</h3>" + mine.map(function (r) {
-      return '<div class="mkitem"><span class="nm">' + esc(r.name) + '</span><button type="button" data-edit="' + r.id + '">Edit</button><button type="button" class="del" data-del="' + r.id + '">Delete</button></div>';
+      var pub = r.vis === "public";
+      return '<div class="mkitem"><span class="nm">' + esc(r.name) + '</span><span class="mkbadge ' + (pub ? "pub" : "priv") + '">' + (pub ? "🌎 Public" : "🔒 Private") + '</span><button type="button" data-vis="' + r.id + '">' + (pub ? "Make private" : "Share publicly") + '</button><button type="button" data-edit="' + r.id + '">Edit</button><button type="button" class="del" data-del="' + r.id + '">Delete</button></div>';
     }).join("");
+    box.querySelectorAll("[data-vis]").forEach(function (b) { b.addEventListener("click", function () { toggleVis(b.getAttribute("data-vis")); }); });
     box.querySelectorAll("[data-edit]").forEach(function (b) { b.addEventListener("click", function () { startEdit(b.getAttribute("data-edit")); }); });
     box.querySelectorAll("[data-del]").forEach(function (b) { b.addEventListener("click", function () { delRecipe(b.getAttribute("data-del")); }); });
   }
@@ -5380,6 +5396,9 @@ hot sauce</p>
     $("mk_cats").value = (r.cats || []).join(", ");
     $("mk_ing").value = (r.ing || []).join("\n"); $("mk_dir").value = (r.dir || []).join("\n");
     $("mk_notes").value = r.notes || ""; $("mk_nut").value = (r.nut || []).join("\n"); $("mk_src").value = r.source || "";
+    $("mk_byline").value = r.byline || (function () { try { return localStorage.getItem("tydRecipeByline") || ""; } catch (e) { return ""; } })();
+    var vis = r.vis === "public" ? "public" : "private";
+    document.querySelectorAll('input[name="mk_vis"]').forEach(function (rb) { rb.checked = rb.value === vis; });
     pendingPhoto = r.image || "";
     var pv = $("mkphoto_prev");
     if (pendingPhoto) { pv.src = pendingPhoto; pv.style.display = "block"; $("mk_photo_rm").style.display = "inline-block"; }
@@ -5392,6 +5411,19 @@ hot sauce</p>
     editingId = id; fillForm(r);
     $("mk_save").textContent = "Save changes"; $("mk_cancel").style.display = "inline-block";
     sec.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  function toggleVis(id) {
+    var cur = load(); var changedOne = null;
+    var nl = cur.map(function (x) { if (x.id === id) { x = Object.assign({}, x, { vis: x.vis === "public" ? "private" : "public", u: Date.now() }); changedOne = x; } return x; });
+    if (!changedOne) return;
+    if (!persist(nl, loadDel())) { $("mk_status").textContent = "Could not save on this device."; return; }
+    changed(); renderMine();
+    if (changedOne.vis === "public") {
+      var st = window.TYDPublicState ? window.TYDPublicState() : "unknown";
+      $("mk_status").textContent = st === "in" ? "Shared! It will show in Shared by the Pond in a moment." : "Marked public. It will appear on the site as soon as you are signed in to your Pond Account on this device.";
+    } else {
+      $("mk_status").textContent = "Back to private. It will come off the public section shortly.";
+    }
   }
   function delRecipe(id) {
     var cur = load(); var r = cur.filter(function (x) { return x.id === id; })[0];
@@ -5436,11 +5468,14 @@ hot sauce</p>
       cook: $("mk_cook").value ? String(parseInt($("mk_cook").value, 10) || "") : "",
       cats: cats, ing: lines($("mk_ing").value), dir: lines($("mk_dir").value),
       notes: $("mk_notes").value.trim(), nut: lines($("mk_nut").value),
-      source: $("mk_src").value.trim(), image: pendingPhoto || "", u: Date.now()
+      source: $("mk_src").value.trim(), image: pendingPhoto || "", u: Date.now(),
+      vis: (document.querySelector('input[name="mk_vis"]:checked') || {}).value === "public" ? "public" : "private",
+      byline: $("mk_byline").value.trim()
     };
     var cur = load(); var done = false;
     var nl = cur.map(function (x) { if (x.id === r.id) { done = true; return r; } return x; });
     if (!done) nl.push(r);
+    try { localStorage.setItem("tydRecipeByline", r.byline || ""); } catch (e) {}
     if (!persist(nl, loadDel())) { $("mk_status").textContent = "This device is out of room for recipe photos. Try a smaller photo, or remove one from another recipe."; return; }
     changed();
     $("mk_status").textContent = "Saved! Taking you to your recipe...";
@@ -7145,18 +7180,96 @@ hot sauce</p>
 <script>
 (function () {
   "use strict";
-  // Lucy's own created recipes sync to the Pond Account as users/{uid}.myRecipes
-  // (plus myRecipesDeleted tombstones), merged by id, newest edit wins.
-  var uid = null, fsx = null, pushT = null, merged = false;
+  // Lucy's own recipes sync to users/{uid}.myRecipes (private). Recipes she marks
+  // Public are also published to the publicRecipes collection, which anyone can
+  // read; the Shared by the Pond section renders that feed for every visitor.
+  var uid = null, fsx = null, pushT = null, merged = false, pubReady = false;
+  function pubIds() { try { return JSON.parse(localStorage.getItem("tydMyPublicIds")) || []; } catch (e) { return []; } }
+  function setPubIds(a) { try { localStorage.setItem("tydMyPublicIds", JSON.stringify(a)); } catch (e) {} }
+  window.TYDPublicState = function () { return uid ? "in" : "out"; };
   function schedulePush() {
     if (!uid || !fsx) return;
     clearTimeout(pushT);
     pushT = setTimeout(function () {
       if (!uid || !fsx || !window.TYDMyRecipes) return;
       fsx.setDoc(fsx.doc(fsx.db, "users", uid), { myRecipes: window.TYDMyRecipes.get(), myRecipesDeleted: window.TYDMyRecipes.getDeleted() }, { merge: true }).catch(function () {});
+      publishMine();
     }, 900);
   }
   window.TYDMyRecipesChanged = schedulePush;
+  function publishMine() {
+    if (!uid || !fsx || !window.TYDMyRecipes) return;
+    var mine = window.TYDMyRecipes.get() || [];
+    var want = {};
+    mine.forEach(function (r) { if (r.vis === "public") want[r.id] = r; });
+    var had = pubIds(), now = [];
+    Object.keys(want).forEach(function (id) {
+      var r = want[id]; now.push(id);
+      var pub = Object.assign({}, r); delete pub.image;
+      pub.r_image = r.image || "";
+      fsx.setDoc(fsx.doc(fsx.db, "publicRecipes", id), { ownerUid: uid, u: r.u || Date.now(), r: pub }, { merge: false }).catch(function () {});
+    });
+    had.forEach(function (id) {
+      if (!want[id]) fsx.deleteDoc(fsx.doc(fsx.db, "publicRecipes", id)).catch(function () {});
+    });
+    setPubIds(now);
+  }
+  // ---- Shared by the Pond section ----
+  var sec = document.createElement("section");
+  sec.className = "mkcard"; sec.id = "pondshared";
+  sec.innerHTML = "<h2>🌎 Shared by the Pond</h2>" +
+    '<p class="mkintro">Recipes other cooks in the Pond chose to share publicly. Tap one to open it, save it, plan it, or cook it, just like the rest of the cookbook. Yours appear here too when you mark them Public.</p>' +
+    '<div id="pubgrid" style="display:flex;flex-wrap:wrap;gap:10px"><p class="mkintro" id="pubempty">Loading shared recipes...</p></div>';
+  var mine = document.getElementById("makeyourown");
+  if (mine && mine.parentNode) mine.parentNode.insertBefore(sec, mine.nextSibling);
+  function renderPublic(docs) {
+    var grid = document.getElementById("pubgrid");
+    if (!grid) return;
+    var list = (docs || []).filter(function (d) { return d && d.r && d.r.id && d.r.name; });
+    list.sort(function (a, b) { return (b.u || 0) - (a.u || 0); });
+    list = list.slice(0, 60);
+    if (!list.length) { grid.innerHTML = '<p class="mkintro">No recipes have been shared yet. Mark one of yours Public and it will be the first one here.</p>'; return; }
+    grid.innerHTML = "";
+    list.forEach(function (d) {
+      var r = d.r;
+      var byline = r.byline || "A Pond cook";
+      var tile = document.createElement("button");
+      tile.className = "tile"; tile.type = "button";
+      var img = r.r_image || r.image || "";
+      tile.innerHTML = (img ? '<span class="timg"></span>' : '<span class="timg temoji">🍽️</span>') +
+        '<span class="tname">' + String(r.name).replace(/</g, "&lt;") + '</span>' +
+        '<span style="display:block;padding:0 8px 8px;font-size:11px;color:#5b7a87">by ' + String(byline).replace(/</g, "&lt;") + "</span>";
+      if (img) { var ts = tile.querySelector(".timg"); if (ts) ts.style.backgroundImage = "url(\"" + img + "\")"; }
+      tile.addEventListener("click", function () { openPublic(d); });
+      grid.appendChild(tile);
+      // Patch the saved-names map so a saved shared recipe shows its name.
+      try { if (window.NAMES) window.NAMES[r.id] = r.name; } catch (e) {}
+    });
+  }
+  window.TYDRenderPublic = renderPublic;
+  function openPublic(d) {
+    var r = d.r;
+    var pool = document.getElementById("cardpool");
+    if (pool && !document.getElementById(r.id) && window.TYDCardHTML) {
+      var full = Object.assign({}, r, { image: r.r_image || r.image || "", sharedBy: r.byline || "A Pond cook" });
+      var tmp = document.createElement("div");
+      tmp.innerHTML = window.TYDCardHTML(full);
+      var card = tmp.firstChild;
+      // Only the Save button is wired for shared cards.
+      card.querySelectorAll("[data-share],[data-print]").forEach(function (b) { b.remove(); });
+      var sv = card.querySelector("[data-save]");
+      if (sv && window.TYDGetSaved && window.TYDSetSaved) {
+        sv.addEventListener("click", function () {
+          var saved = window.TYDGetSaved(); var k = saved.indexOf(r.id);
+          if (k === -1) saved.push(r.id); else saved.splice(k, 1);
+          window.TYDSetSaved(saved);
+        });
+      }
+      pool.appendChild(card);
+    }
+    if (window.TYDOpenRecipe) window.TYDOpenRecipe(r.id);
+    else location.hash = r.id;
+  }
   var cfg = { apiKey: "AIzaSyDoy5WjnhDlBqZaqZDUFkX6XodiXvQmr7I", authDomain: "treatyourselfdiscounts-881a9.firebaseapp.com", projectId: "treatyourselfdiscounts-881a9", storageBucket: "treatyourselfdiscounts-881a9.firebasestorage.app", messagingSenderId: "635205549581", appId: "1:635205549581:web:698e046036b14f33f81f44" };
   Promise.all([
     import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js"),
@@ -7167,7 +7280,17 @@ hot sauce</p>
     try { app = mods[0].getApp(); } catch (e) { app = mods[0].initializeApp(cfg); }
     var auth = mods[1].getAuth(app);
     var db = mods[2].getFirestore(app);
-    fsx = { setDoc: mods[2].setDoc, doc: mods[2].doc, db: db };
+    fsx = { setDoc: mods[2].setDoc, doc: mods[2].doc, db: db, deleteDoc: mods[2].deleteDoc };
+    // Public feed for every visitor, signed in or not.
+    mods[2].getDocs(mods[2].collection(db, "publicRecipes")).then(function (qs) {
+      var docs = [];
+      qs.forEach(function (doc) { docs.push(doc.data()); });
+      pubReady = true;
+      renderPublic(docs);
+    }).catch(function () {
+      var g = document.getElementById("pubempty");
+      if (g) g.textContent = "Shared recipes could not load right now. Yours are still safe in your own cookbook.";
+    });
     mods[1].onAuthStateChanged(auth, function (user) {
       if (!user || merged) { if (!user) uid = null; return; }
       uid = user.uid; merged = true;
@@ -7177,8 +7300,8 @@ hot sauce</p>
         var remote = Array.isArray(data.myRecipes) ? data.myRecipes : [];
         var remoteDel = Array.isArray(data.myRecipesDeleted) ? data.myRecipesDeleted : [];
         var delMap = {};
-        (window.TYDMyRecipes.getDeleted() || []).concat(remoteDel).forEach(function (d) {
-          if (d && d.id) delMap[d.id] = Math.max(delMap[d.id] || 0, d.t || 0);
+        (window.TYDMyRecipes.getDeleted() || []).concat(remoteDel).forEach(function (dd) {
+          if (dd && dd.id) delMap[dd.id] = Math.max(delMap[dd.id] || 0, dd.t || 0);
         });
         var byId = {};
         (window.TYDMyRecipes.get() || []).concat(remote).forEach(function (r) {
@@ -7194,7 +7317,10 @@ hot sauce</p>
         schedulePush();
       }).catch(function () {});
     });
-  }).catch(function () {});
+  }).catch(function () {
+    var g = document.getElementById("pubempty");
+    if (g) g.textContent = "Shared recipes could not load right now. Yours are still safe in your own cookbook.";
+  });
 })();
 </script>
 </body>
