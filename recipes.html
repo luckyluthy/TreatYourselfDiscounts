@@ -5285,11 +5285,13 @@ hot sauce</p>
   var st = document.createElement("style");
   st.textContent = "#catchips{display:none;}"
     + ".plsec{background:#fff;border:2px solid #bcd9e4;border-radius:14px;margin:10px 0;overflow:hidden;}"
-    + ".plhead{display:flex;align-items:center;gap:8px;background:#fff;padding:6px 10px 6px 6px;}"
+    + ".plhead{display:flex;flex-direction:column;align-items:stretch;gap:2px;background:#fff;padding:6px 10px 8px 6px;}"
+    + ".plbar{display:flex;align-items:center;gap:6px;padding:2px 0 0;}"
+    + ".plbar .plctrls{margin-left:auto;}"
     + ".plsec.open .plhead{background:#fffbe8;}"
     + ".pltoggle{display:flex;align-items:center;gap:11px;flex:1;background:none;border:none;padding:4px 2px;cursor:pointer;font-family:inherit;text-align:left;min-width:0;}"
     + ".plthumb{width:44px;height:44px;border-radius:10px;background:#eaf7fb;background-position:center;background-size:cover;background-repeat:no-repeat;display:flex;align-items:center;justify-content:center;font-size:22px;flex:none;}"
-    + ".plname{font-weight:800;font-size:16.5px;color:#1f5f74;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}"
+    + ".plname{font-weight:800;font-size:17px;color:#1f5f74;flex:1;line-height:1.25;}"
     + ".plcount{font-size:12.5px;font-weight:700;color:#8a7a2e;background:#fff3b0;border-radius:999px;padding:3px 9px;white-space:nowrap;}"
     + ".plchev{font-size:15px;color:#1f5f74;font-weight:900;}"
     + ".plctrls{display:flex;gap:6px;flex:none;}"
@@ -5373,9 +5375,14 @@ hot sauce</p>
     var sec = document.createElement("div"); sec.className = "plsec";
     var head = document.createElement("div"); head.className = "plhead";
     var tog = document.createElement("button"); tog.type = "button"; tog.className = "pltoggle";
-    tog.innerHTML = '<span class="plthumb"></span><span class="plname"></span><span class="plcount"></span><span class="plchev">\u25B8</span>';
+    tog.innerHTML = '<span class="plthumb"></span><span class="plname"></span><span class="plchev">\u25B8</span>';
     tog.querySelector(".plname").textContent = name;
     head.appendChild(tog);
+    var bar = document.createElement("div"); bar.className = "plbar";
+    var cnt = document.createElement("span"); cnt.className = "plcount";
+    bar.appendChild(cnt);
+    head.appendChild(bar);
+    sec._countEl = cnt;
     var body = document.createElement("div"); body.className = "plbody"; body.style.display = "none";
     sec.appendChild(head); sec.appendChild(body);
     sec._body = body; sec._tog = tog; sec._chev = tog.querySelector(".plchev");
@@ -5383,7 +5390,7 @@ hot sauce</p>
     if (carousel) {
       var ctrls = document.createElement("div"); ctrls.className = "plctrls";
       ctrls.innerHTML = '<button type="button" class="plbtn plprev" aria-label="Previous recipe">\u2039</button><button type="button" class="plbtn plnext" aria-label="Next recipe">\u203A</button><button type="button" class="plspin">\uD83C\uDFB0 Spin</button>';
-      head.appendChild(ctrls);
+      bar.appendChild(ctrls);
       var pick = document.createElement("div"); pick.className = "plpick"; pick.style.display = "none";
       var track = document.createElement("div"); track.className = "ctrack";
       body.appendChild(pick); body.appendChild(track);
@@ -5481,7 +5488,7 @@ hot sauce</p>
       if (!firstImg && im && im.getAttribute("src")) firstImg = im.getAttribute("src");
       sec._track.appendChild(makeTile(card));
     });
-    sec._tog.querySelector(".plcount").textContent = list.length + (list.length === 1 ? " recipe" : " recipes");
+    sec._countEl.textContent = list.length + (list.length === 1 ? " recipe" : " recipes");
     var th = sec._tog.querySelector(".plthumb");
     if (firstImg) th.style.backgroundImage = "url(\"" + firstImg.replace(/"/g, "%22") + "\")"; else th.textContent = "\uD83C\uDF7D\uFE0F";
     sections[name] = sec;
@@ -5531,7 +5538,7 @@ hot sauce</p>
     Object.keys(sections).forEach(function (k) { if (k !== "__results") sections[k].style.display = "none"; });
     matches.forEach(function (c) { rsec._grid.appendChild(c._tile); });
     rsec._tog.querySelector(".plname").textContent = "Results for \u201C" + input.value.trim() + "\u201D";
-    rsec._tog.querySelector(".plcount").textContent = matches.length + (matches.length === 1 ? " recipe" : " recipes");
+    rsec._countEl.textContent = matches.length + (matches.length === 1 ? " recipe" : " recipes");
     rsec.style.display = "";
     openSec(rsec);
     nomatch.classList.toggle("show", matches.length === 0);
