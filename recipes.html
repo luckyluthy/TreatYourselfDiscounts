@@ -5694,8 +5694,15 @@ hot sauce</p>
     ".panel h2 { margin:0 0 6px; color:#1f5f74; font-size:20px; }",
     ".panel h3 { margin:14px 0 4px; color:#1f5f74; font-size:15px; }",
     ".gitem { display:flex; gap:8px; align-items:flex-start; padding:6px 0; border-top:1px dashed #d7e6ec; font-size:14.5px; }",
-    ".gitem input { margin-top:3px; }",
-    ".gitem.done span { text-decoration:line-through; color:#7d99a5; }",
+    ".gitem .gtext { flex:1; }",
+    ".gitem.used .gtext { text-decoration:line-through; color:#7d99a5; }",
+    ".gitem .gstat { font-size:11.5px; font-weight:800; border-radius:999px; padding:2px 8px; white-space:nowrap; align-self:center; }",
+    ".gstat.got { background:#e4f3e8; color:#1e5c33; }",
+    ".gstat.used { background:#1f5f74; color:#fff; }",
+    ".gbtn { border:2px solid #bcd9e4; background:#eaf7fb; color:#1f5f74; font-family:inherit; font-weight:800; font-size:12px; border-radius:999px; padding:5px 10px; cursor:pointer; white-space:nowrap; align-self:center; }",
+    ".gbtn.on { background:#ffd94d; border-color:#e3c93f; color:#6b5900; }",
+    ".gadd { display:flex; gap:6px; margin:10px 0 4px; }",
+    ".gadd input { flex:1; border:2px solid #bcd9e4; border-radius:12px; padding:9px 10px; font-size:15px; font-family:inherit; min-width:0; }",
     ".gitem .gx { margin-left:auto; background:none; border:none; color:#8c2b2b; font-weight:800; cursor:pointer; font-family:inherit; }",
     ".prow { display:flex; gap:6px; flex-wrap:wrap; margin-top:12px; }",
     ".pitem { display:flex; gap:8px; align-items:center; padding:8px 0; border-top:1px dashed #d7e6ec; font-size:14.5px; }",
@@ -5705,7 +5712,7 @@ hot sauce</p>
     ".planpop h3 { margin:0 0 8px; font-size:16px; color:#1f5f74; }",
     ".planpop input[type=date] { width:100%; border:2px solid #bcd9e4; border-radius:12px; padding:9px 10px; font-size:15px; font-family:inherit; }",
     ".planpop .gcal { display:none; margin-top:10px; background:#1f5f74; color:#fff; font-weight:800; text-decoration:none; border-radius:999px; padding:10px 14px; text-align:center; font-size:14px; }",
-    "@media print { body.gprint .app, body.gprint .gpill { display:none !important; } body.gprint .panel { position:static; display:block; background:#fff; } body.gprint .panel .box { box-shadow:none; max-height:none; margin:0; } body.gprint .prow, body.gprint .gx { display:none !important; } }"
+    "@media print { body.gprint .app, body.gprint .gpill { display:none !important; } body.gprint .panel { position:static; display:block; background:#fff; } body.gprint .panel .box { box-shadow:none; max-height:none; margin:0; } body.gprint .prow, body.gprint .gx, body.gprint .gbtn, body.gprint .gadd { display:none !important; } }"
   ].join("\n");
   document.head.appendChild(style);
 
@@ -5797,13 +5804,23 @@ hot sauce</p>
   document.body.appendChild(pill);
   var gpanel = document.createElement("div");
   gpanel.className = "panel";
-  gpanel.innerHTML = '<div class="box"><h2>🛒 Grocery list</h2><div data-glist></div>' +
+  gpanel.innerHTML = '<div class="box"><h2>🛒 Grocery list</h2>' +
+    '<div class="gadd"><input type="text" data-gadd-input placeholder="Add your own item, like Eggs"><button class="cookbtn" data-gadd>Add</button></div>' +
+    '<div data-glist></div>' +
     '<div class="prow"><button class="cookbtn" data-gcopy>Copy list</button><button class="cookbtn" data-gprint>Print</button>' +
-    '<button class="cookbtn" data-gcleardone>Clear checked</button><button class="cookbtn" data-gclear>Clear all</button>' +
+    '<button class="cookbtn" data-gcleardone>Clear used items</button><button class="cookbtn" data-gclear>Clear all</button>' +
     '<button class="cookbtn" data-gclose>Close</button></div>' +
     '<p style="font-size:12.5px; color:#3f6b7a;">Saved on this device. Amounts match the servings and measurements you picked on each recipe.</p></div>';
   document.body.appendChild(gpanel);
-  function grocery() { return load(GKEY, []); }
+  function grocery() {
+    var g = load(GKEY, []);
+    g.forEach(function (it) {
+      if (it.used === undefined) it.used = !!it.done;
+      if (it.got === undefined) it.got = false;
+      it.done = it.used;
+    });
+    return g;
+  }
   function updatePill() {
     var n = grocery().length;
     pill.textContent = "🛒 Grocery list" + (n ? " (" + n + ")" : "");
@@ -5822,12 +5839,24 @@ hot sauce</p>
     g.forEach(function (it) { (groups[it.recipe] = groups[it.recipe] || []).push(it); });
     host.innerHTML = Object.keys(groups).map(function (name) {
       return "<h3>" + esc(name) + "</h3>" + groups[name].map(function (it) {
-        return '<label class="gitem' + (it.done ? " done" : "") + '"><input type="checkbox" data-gid="' + esc(it.id) + '"' + (it.done ? " checked" : "") + '><span>' + esc(it.text) + '</span><button class="gx" data-gx="' + esc(it.id) + '">✕</button></label>';
+        return '<div class="gitem' + (it.used ? " used" : "") + '"><span class="gtext">' + esc(it.text) + '</span>' +
+          (it.used ? '<span class="gstat used">Used ✓</span>' : it.got ? '<span class="gstat got">Got it ✓</span>' : '') +
+          '<button class="gbtn' + (it.got ? " on" : "") + '" data-ggot="' + esc(it.id) + '">🛒 Got it</button>' +
+          '<button class="gbtn' + (it.used ? " on" : "") + '" data-gused="' + esc(it.id) + '">✓ Used</button>' +
+          '<button class="gx" data-gx="' + esc(it.id) + '">✕</button></div>';
       }).join("");
     }).join("");
-    host.querySelectorAll("[data-gid]").forEach(function (cb) {
-      cb.addEventListener("change", function () {
-        var g2 = grocery(); g2.forEach(function (it) { if (it.id === cb.getAttribute("data-gid")) it.done = cb.checked; });
+    host.querySelectorAll("[data-ggot]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var g2 = grocery();
+        g2.forEach(function (it) { if (it.id === b.getAttribute("data-ggot")) { it.got = !it.got; if (!it.got) it.used = false; it.done = it.used; } });
+        save(GKEY, g2); renderGrocery(); updatePill();
+      });
+    });
+    host.querySelectorAll("[data-gused]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var g2 = grocery();
+        g2.forEach(function (it) { if (it.id === b.getAttribute("data-gused")) { it.used = !it.used; if (it.used) it.got = true; it.done = it.used; } });
         save(GKEY, g2); renderGrocery(); updatePill();
       });
     });
@@ -5843,11 +5872,22 @@ hot sauce</p>
   gpanel.addEventListener("click", function (e) { if (e.target === gpanel) gpanel.classList.remove("show"); });
   gpanel.querySelector("[data-gclose]").addEventListener("click", function () { gpanel.classList.remove("show"); });
   gpanel.querySelector("[data-gclear]").addEventListener("click", function () { save(GKEY, []); renderGrocery(); updatePill(); });
+  var gaddInput = gpanel.querySelector("[data-gadd-input]");
+  function addManual() {
+    var v = (gaddInput.value || "").trim();
+    if (!v) return;
+    var g = grocery();
+    g.push({ id: "manual|" + Date.now(), text: v, recipe: "My grocery list", got: false, used: false, done: false });
+    save(GKEY, g); gaddInput.value = "";
+    renderGrocery(); updatePill();
+  }
+  gpanel.querySelector("[data-gadd]").addEventListener("click", addManual);
+  gaddInput.addEventListener("keydown", function (e) { if (e.key === "Enter") addManual(); });
   gpanel.querySelector("[data-gcleardone]").addEventListener("click", function () { save(GKEY, grocery().filter(function (it) { return !it.done; })); renderGrocery(); updatePill(); });
   gpanel.querySelector("[data-gcopy]").addEventListener("click", function () {
     var g = grocery(); var groups = {};
     g.forEach(function (it) { (groups[it.recipe] = groups[it.recipe] || []).push(it); });
-    var text = Object.keys(groups).map(function (name) { return name + "\n" + groups[name].map(function (it) { return "- " + it.text; }).join("\n"); }).join("\n\n");
+    var text = Object.keys(groups).map(function (name) { return name + "\n" + groups[name].map(function (it) { return "- " + (it.used ? "✓ " : "") + it.text + (it.got && !it.used ? " (got it)" : ""); }).join("\n"); }).join("\n\n");
     if (navigator.clipboard) navigator.clipboard.writeText(text).then(function () { alert("Grocery list copied. Paste it anywhere you like."); });
   });
   gpanel.querySelector("[data-gprint]").addEventListener("click", function () {
