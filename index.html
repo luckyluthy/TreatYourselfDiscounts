@@ -79,6 +79,7 @@
 
   .play-banner { display: flex; align-items: center; gap: 12px; margin: 14px 16px 0; padding: 14px 16px; border-radius: 18px; text-decoration: none; color: #14505f; background: linear-gradient(120deg, #ffe066, #ffd94d 40%, #a5dcf0); border: 2px solid #f0c93e; box-shadow: 0 6px 16px rgba(35,65,77,.15); animation: pondfloat 7s ease-in-out infinite; transition: transform .25s ease, box-shadow .25s ease; }
   .play-banner:hover { transform: translateY(-3px); box-shadow: 0 10px 22px rgba(35,65,77,.2); }
+  .play-banner.recipes-banner { background: linear-gradient(120deg, #e6f7df, #bfe8c9 45%, #ffe9a8); border-color: #9ed3a6; }
   .play-banner .play-emoji { font-size: 30px; line-height: 1; }
   .play-banner .play-text { flex: 1; min-width: 0; }
   .play-banner .play-text b { display: block; font-size: 16.5px; }
@@ -122,6 +123,11 @@
     <h1 class="sr-only">TreatYourselfDiscounts</h1>
     <p class="sr-only">Welcome to the Pond! Verified deals and discount links, all in one place.</p>
   </header>
+  <a class="play-banner recipes-banner" href="recipes.html">
+    <span class="play-emoji" aria-hidden="true">🍳</span>
+    <span class="play-text"><b>Lucy's Recipes</b><span>My whole cookbook is here: 261 recipes with grocery lists, meal planning, and time filters</span></span>
+    <span class="play-arrow" aria-hidden="true">&#8250;</span>
+  </a>
   <a class="play-banner" href="pond-eye-spy.html">
     <span class="play-emoji" aria-hidden="true">🔎</span>
     <span class="play-text"><b>Play Pond Eye Spy</b><span>Find all 7 things hiding in the pond and unlock the deals of the day</span></span>

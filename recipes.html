@@ -5308,6 +5308,11 @@ hot sauce</p>
     + ".tile.picked{outline:4px solid #ffd94d;outline-offset:2px;}"
     + ".plpick{background:#fff3b0;border:2px solid #ffd94d;color:#6b5900;border-radius:10px;padding:8px 12px;font-size:14.5px;margin:6px 0 2px;cursor:pointer;}"
     + ".rgrid{display:flex;flex-wrap:wrap;gap:10px;padding-top:8px;}"
+    + ".timebar{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;background:#fff;border:2px solid #bcd9e4;border-radius:14px;padding:10px 12px;margin:10px 0 4px;}"
+    + ".timebar .tb-title{font-weight:900;color:#1f5f74;font-size:14.5px;}"
+    + ".timebar label{font-size:13.5px;font-weight:700;color:#3f6b7a;display:inline-flex;align-items:center;gap:6px;}"
+    + ".timebar select{font-family:inherit;font-size:13.5px;font-weight:700;color:#14505f;border:2px solid #bcd9e4;border-radius:999px;padding:5px 9px;background:#eaf7fb;}"
+    + ".timebar .tb-unk{font-weight:600;}"
     + ".surprise{display:block;width:100%;margin:12px 0 4px;background:#ffd94d;border:2px solid #e3c93f;color:#6b5900;font-family:inherit;font-weight:900;font-size:16px;border-radius:14px;padding:13px;cursor:pointer;}"
     + ".detail{position:fixed;inset:0;background:rgba(10,25,32,.55);z-index:10000;display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:14px;}"
     + ".dbox{background:#fdfbf5;border-radius:16px;max-width:640px;width:100%;padding:10px 12px 18px;box-shadow:0 12px 40px rgba(0,0,0,.35);}"
@@ -5495,6 +5500,12 @@ hot sauce</p>
     parent.insertBefore(sec, anchor);
   });
   cards.forEach(function (card) { pool.appendChild(card); });
+  cards.forEach(function (card) {
+    var mt = card.querySelector(".meta"), tx = mt ? mt.textContent : "";
+    var pm = /Prep:\s*(\d+)\s*min/.exec(tx), cm = /Cook:\s*(\d+)\s*min/.exec(tx);
+    card._prep = pm ? +pm[1] : null;
+    card._cook = cm ? +cm[1] : null;
+  });
   var rsec = makeSection("Search results", false);
   var rgrid = document.createElement("div"); rgrid.className = "rgrid";
   rsec._body.appendChild(rgrid);
@@ -5506,6 +5517,13 @@ hot sauce</p>
   surprise.type = "button"; surprise.className = "surprise";
   surprise.textContent = "\uD83C\uDFB2 Can't decide? Spin the whole cookbook";
   parent.insertBefore(surprise, sections[order[0]]);
+  var timebar = document.createElement("div");
+  timebar.className = "timebar";
+  timebar.innerHTML = "<span class=\"tb-title\">\u23F1 Filter by time</span>"
+    + "<label>Prep up to <select class=\"tf-prep\"><option value=\"0\">Any time</option><option value=\"10\">10 min</option><option value=\"15\">15 min</option><option value=\"20\">20 min</option><option value=\"30\">30 min</option><option value=\"45\">45 min</option><option value=\"60\">1 hour</option></select></label>"
+    + "<label>Cook up to <select class=\"tf-cook\"><option value=\"0\">Any time</option><option value=\"15\">15 min</option><option value=\"20\">20 min</option><option value=\"30\">30 min</option><option value=\"45\">45 min</option><option value=\"60\">1 hour</option><option value=\"90\">1.5 hours</option><option value=\"120\">2 hours</option><option value=\"240\">4 hours</option></select></label>"
+    + "<label class=\"tb-unk\"><input type=\"checkbox\" class=\"tf-unk\"> Include recipes with no time listed</label>";
+  parent.insertBefore(timebar, sections[order[0]]);
   surprise.addEventListener("click", function () {
     var c = cards[Math.floor(Math.random() * cards.length)];
     var sec = sections[c.getAttribute("data-home")]; if (!sec) return;
@@ -5530,20 +5548,32 @@ hot sauce</p>
   restore();
   setCountHome();
   if (order.length) openSec(sections[order[0]]);
-  input.addEventListener("input", function () {
+  var tfPrep = timebar.querySelector(".tf-prep"), tfCook = timebar.querySelector(".tf-cook"), tfUnk = timebar.querySelector(".tf-unk");
+  function timeActive() { return (+tfPrep.value > 0) || (+tfCook.value > 0); }
+  function timeMatch(c) {
+    var p = +tfPrep.value, k = +tfCook.value, unk = tfUnk.checked;
+    if (p > 0) { if (c._prep == null) { if (!unk) return false; } else if (c._prep > p) return false; }
+    if (k > 0) { if (c._cook == null) { if (!unk) return false; } else if (c._cook > k) return false; }
+    return true;
+  }
+  function applyView() {
     var q = input.value.trim().toLowerCase();
     restore();
-    if (!q) { setCountHome(); if (order.length) openSec(sections[order[0]]); return; }
-    var matches = cards.filter(function (c) { return (c.getAttribute("data-search") || "").indexOf(q) !== -1; });
+    if (!q && !timeActive()) { setCountHome(); if (order.length) openSec(sections[order[0]]); return; }
+    var matches = cards.filter(function (c) { return (!q || (c.getAttribute("data-search") || "").indexOf(q) !== -1) && timeMatch(c); });
     Object.keys(sections).forEach(function (k) { if (k !== "__results") sections[k].style.display = "none"; });
     matches.forEach(function (c) { rsec._grid.appendChild(c._tile); });
-    rsec._tog.querySelector(".plname").textContent = "Results for \u201C" + input.value.trim() + "\u201D";
+    rsec._tog.querySelector(".plname").textContent = q ? ("Results for \u201C" + input.value.trim() + "\u201D" + (timeActive() ? " within your time" : "")) : "\u23F1 Recipes that fit your time";
     rsec._countEl.textContent = matches.length + (matches.length === 1 ? " recipe" : " recipes");
     rsec.style.display = "";
     openSec(rsec);
     nomatch.classList.toggle("show", matches.length === 0);
     rcount.textContent = "Showing " + matches.length + " of " + cards.length + " recipes";
-  });
+  }
+  input.addEventListener("input", applyView);
+  tfPrep.addEventListener("change", applyView);
+  tfCook.addEventListener("change", applyView);
+  tfUnk.addEventListener("change", applyView);
   function openHash() {
     var id = (location.hash || "").replace(/^#/, "");
     if (!id) return;
