@@ -3,6 +3,58 @@
    instructions everywhere else) and registers the service worker so the
    site behaves like an app from any entry page. */
 (function () {
+  /* Dark / light theme: a small toggle pinned at the top of the screen on
+     every page. Light is the site's original look (nothing changes); dark
+     recolors the page surfaces, cards and text through the overrides below.
+     The choice is remembered on the device in localStorage 'tydTheme'. */
+  var tydTheme = "light";
+  try { tydTheme = localStorage.getItem("tydTheme") === "dark" ? "dark" : "light"; } catch (e) {}
+  if (tydTheme === "dark") document.documentElement.setAttribute("data-theme", "dark");
+  var tydSurf = "#q,.account-bar,.actbtn,.alertrow,.app,.bar,.brand-row,.btn-alt,.btn-ghost,.card,.cardrow,.codechip,.coupon,.dashitem,.deal,.fhear,.ffront,.final,.found-list span,.hint-btn,.hint-panel,.kform button,.kiconbtn.del,.mini,.mkbtn,.mkbtn.ghost,.mkcard,.mkitem,.mkitem button,.mkitem button.del,.mkvis,.nomatch,.res,.row button,.savedbar,.side-links a,.social-row a,.soundbtn,.tag,.tdcard,.tile,.toolbar,.win,.win .deal,.win a.play,.word";
+  var tydInk = "#q,.account-bar .ab-label,.actbtn,.alertrow a,.alertrow b,.back,a.back,.brand-row,.card a,.card h2,.card h3,.dashitem a,.fcdate,.fko,.foot-links a,.from,.hint-kicker,.item .title,.ken,.kko,.meta,.nest,.prefrow .prefgroup,.prefrow label,.quizmsg,.res .tt,.savedbar a,.section-title,.side-links a,.side-title,.social-row a,.tag,.td-search,.tile .tname,.topdeals h2,.vowel b,.win h2,.win-deals h3,.word .wrom,details > summary .chev,label";
+  var tydCss = ""
+    + "#tydthemebtn{position:fixed;top:calc(10px + env(safe-area-inset-top));right:12px;z-index:9995;border-radius:999px;border:2px solid #bcd9e4;background:rgba(255,255,255,.94);color:#1f5f74;font-weight:800;font-size:13px;padding:7px 13px;cursor:pointer;box-shadow:0 3px 10px rgba(35,65,77,.22);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;}"
+    + "html[data-theme=\"dark\"] body{background:#0b141f !important;color:#e8f1f7 !important;}"
+    + "html[data-theme=\"dark\"] " + tydSurf.split(",").join(",html[data-theme=\"dark\"] ") + "{background:#172635 !important;border-color:#2e4a5f !important;}"
+    + "html[data-theme=\"dark\"] " + tydInk.split(",").join(",html[data-theme=\"dark\"] ") + "{color:#d9ecf5 !important;}"
+    + "html[data-theme=\"dark\"] h1{color:#9fd8ec !important;}"
+    + "html[data-theme=\"dark\"] footer{color:#9db8c6 !important;}"
+    + "html[data-theme=\"dark\"] input:not([type=\"checkbox\"]):not([type=\"radio\"]):not([type=\"range\"]),html[data-theme=\"dark\"] select,html[data-theme=\"dark\"] textarea{background:#101e2c !important;color:#e8f1f7 !important;border-color:#33536b !important;}"
+    + "html[data-theme=\"dark\"] ::placeholder{color:#7d99ab !important;}"
+    + "html[data-theme=\"dark\"] th,html[data-theme=\"dark\"] td{border-color:#2c465a !important;}"
+    + "html[data-theme=\"dark\"] #tydnav{background:rgba(13,24,36,.97) !important;border-top-color:#2c465a !important;}"
+    + "html[data-theme=\"dark\"] #tydnav a,html[data-theme=\"dark\"] #tydnav button{color:#9db8c6 !important;}"
+    + "html[data-theme=\"dark\"] #tydnav .on{color:#ffd94d !important;}"
+    + "html[data-theme=\"dark\"] #tydinstall .box{background:#172635 !important;color:#e8f1f7 !important;}"
+    + "html[data-theme=\"dark\"] #tydinstall h3{color:#9fd8ec !important;}"
+    + "html[data-theme=\"dark\"] #tydthemebtn{background:rgba(16,30,44,.94);border-color:#33536b;color:#ffd94d;}";
+  var tydSt = document.createElement("style");
+  tydSt.id = "tydthemecss";
+  tydSt.textContent = tydCss;
+  document.head.appendChild(tydSt);
+  function tydPaintBtn() {
+    var b = document.getElementById("tydthemebtn");
+    if (b) b.textContent = tydTheme === "dark" ? "☀️ Light" : "🌙 Dark";
+  }
+  function tydAddBtn() {
+    if (document.getElementById("tydthemebtn") || !document.body) return;
+    var b = document.createElement("button");
+    b.id = "tydthemebtn";
+    b.type = "button";
+    b.setAttribute("aria-label", "Switch between dark and light mode");
+    b.addEventListener("click", function () {
+      tydTheme = tydTheme === "dark" ? "light" : "dark";
+      if (tydTheme === "dark") document.documentElement.setAttribute("data-theme", "dark");
+      else document.documentElement.removeAttribute("data-theme");
+      try { localStorage.setItem("tydTheme", tydTheme); } catch (e) {}
+      tydPaintBtn();
+    });
+    document.body.appendChild(b);
+    tydPaintBtn();
+  }
+  if (document.body) tydAddBtn();
+  else document.addEventListener("DOMContentLoaded", tydAddBtn);
+
   if (document.getElementById("tydnav")) return;
   var inBrands = /\/brands\//.test(location.pathname);
   var base = inBrands ? "../" : "";
