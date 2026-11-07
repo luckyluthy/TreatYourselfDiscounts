@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon-v2.png">
+<title>Protect the Pond - TreatYourselfDiscounts</title>
+<style>body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #bfe6f2; color: #23414d; }.wrap { max-width: 430px; margin: 0 auto; min-height: 100vh; padding: 24px 16px 32px; }.bar { height: 10px; border-radius: 999px; background: linear-gradient(160deg, #ffe066, #bfe6f2); }h1 { color: #1f5f74; font-size: 26px; margin: 20px 0 4px; }.sub { color: #4a6b78; margin: 0 0 20px; line-height: 1.5; }.card { background: linear-gradient(#fff, #fff) padding-box, linear-gradient(160deg, #ffe066, #bfe6f2) border-box; border: 2px solid transparent; border-radius: 18px; padding: 16px; margin-bottom: 12px; }.card h2 { margin: 0 0 6px; font-size: 17px; color: #1f5f74; }.card p { margin: 0; line-height: 1.55; font-size: 15px; }.card a { color: #1f5f74; font-weight: 700; }.btn { display: inline-block; margin-top: 10px; background: #ffd94d; color: #6b5900; font-weight: 700; text-decoration: none; padding: 9px 14px; border-radius: 999px; border: none; font-size: 14.5px; cursor: pointer; }.back { display: inline-block; margin-top: 8px; color: #1f5f74; font-weight: 700; text-decoration: none; }.foot { text-align: center; font-size: 12.5px; color: #4a6b78; margin-top: 24px; line-height: 1.5; }#toast { position: fixed; left: 50%; bottom: 92px; transform: translateX(-50%); background: #1f5f74; color: #fff; padding: 9px 16px; border-radius: 999px; font-size: 14px; font-weight: 700; opacity: 0; pointer-events: none; transition: opacity .25s; }#toast.show { opacity: 1; }</style>
+<script data-goatcounter="https://treatyourselfdiscounts.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</head>
+<body>
+<div class="wrap">
+<div class="bar"></div>
+<h1>Protect the Pond 🦆</h1>
+<p class="sub">Welcome to the Pond! Every deal here stays free for every duckling, always. Protecting the Pond just means helping it keep swimming, and the best ways to help do not cost you a penny extra.</p>
+<div class="card"><h2>🛍️ Shop through the Pond's links</h2><p>This is the biggest one. When you buy through the brand links on this site, the brand pays the Pond a small thank-you commission and your price stays exactly the same. Same deal, same price, and the Pond gets a little bread.</p><a class="btn" href="index.html">See today's deals</a></div>
+<div class="card"><h2>🦆 Join the Pond</h2><p>The Pond on Discord is where verified drop alerts land first and where ducklings share codes that would get deleted anywhere else. Joining is free, and every new duckling makes the Pond stronger.</p><a class="btn" href="https://discord.gg/zfcwECetx2">Join the Pond on Discord</a></div>
+<div class="card"><h2>📣 Share the Pond</h2><p>Know a fellow deal hunter? Send them the Pond. One tap copies the link, and sharing is real protection: the more ducklings watching for drops, the better the deals get for everyone.</p><button class="btn" id="copylink" type="button">Copy the Pond link</button></div>
+<div class="card"><h2>🥚 Drop a code</h2><p>Found a working code out in the wild? Share it in #drop-a-code in the Pond and the Flock Leaders will test it. Verified codes get published for the whole flock, and sharers keep the Pond fed.</p><a class="btn" href="https://discord.gg/zfcwECetx2">Drop a code in the Pond</a></div>
+<div class="card"><h2>💛 Follow the flock</h2><p>Follow along on <a href="https://www.instagram.com/treatyourselfdiscounts">Instagram @treatyourselfdiscounts</a> and save the <a href="https://linktr.ee/treatyourselfdiscounts">Linktree</a> for the fastest route to every brand link. Follows and saves help more ducklings find the Pond.</p></div>
+<div class="card"><h2>🔒 Why it is called Protect the Pond</h2><p>The Pond was built so good deals cannot be deleted by platform filters the way they were on Reddit. Shopping through the links, sharing codes, and inviting deal hunters is what keeps it independent, free, and safe from copycats. Thank you for keeping watch with us.</p></div>
+<p><a class="back" href="index.html">Back to TreatYourselfDiscounts</a></p>
+<p class="foot">Some links on this site are affiliate links. If you shop through them, TreatYourselfDiscounts may earn a small commission at no extra cost to you. As an Amazon Associate, TreatYourselfDiscounts earns from qualifying purchases.</p>
+<p class="foot">© 2026 TreatYourselfDiscounts™. All rights reserved. · <a href="terms.html">Terms of Use</a></p>
+</div>
+<div id="toast">Pond link copied 🦆</div>
+<script>
+(function () {
+  var b = document.getElementById('copylink');
+  if (!b) return;
+  b.addEventListener('click', function () {
+    var url = 'https://treatyourselfdiscounts.github.io/';
+    function done() {
+      var t = document.getElementById('toast');
+      t.classList.add('show');
+      setTimeout(function () { t.classList.remove('show'); }, 1800);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(done).catch(function () { window.prompt('Copy the Pond link:', url); });
+    } else { window.prompt('Copy the Pond link:', url); }
+  });
+})();
+</script>
+<script type="module" src="auth-pill.js"></script>
+<script src="site-nav.js"></script>
+</body>
+</html>
