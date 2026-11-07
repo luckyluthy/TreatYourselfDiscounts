@@ -30,6 +30,7 @@
   .word { background: #fff8d6; border-radius: 12px; text-align: center; padding: 10px 4px; }
   .word b { display: block; font-size: 19px; color: #6b5900; }
   .word span { font-size: 12.5px; color: #7a6a1f; }
+  .word .wrom { display: block; font-size: 13.5px; font-weight: 800; color: #1f5f74; }
   .vowel, .word { cursor: pointer; transition: transform .15s ease, box-shadow .15s ease; }
   .vowel:hover, .word:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(35,65,77,.14); }
   .vowel:active, .word:active { transform: scale(.97); }
@@ -39,6 +40,19 @@
   .soundbtn { display: block; margin: 12px auto 0; background: #ffd94d; border: 2px solid #e3c93f; color: #6b5900; font-family: inherit; font-weight: 800; font-size: 14.5px; border-radius: 999px; padding: 9px 18px; cursor: pointer; }
   .soundbtn.off { background: #eaf7fb; border-color: #bcd9e4; color: #1f5f74; }
   .quizmsg { text-align: center; font-weight: 800; color: #1f5f74; margin: 12px 0 0; font-size: 15px; }
+  .fcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-top: 10px; }
+  .fcard { perspective: 700px; height: 190px; cursor: pointer; }
+  .finner { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform .5s; }
+  .fcard.flip .finner { transform: rotateY(180deg); }
+  .fface { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 10px; text-align: center; }
+  .ffront { background: #fff8d6; border: 2px solid #f0c93e; }
+  .fback { background: #eaf7fb; border: 2px solid #bcd9e4; transform: rotateY(180deg); }
+  .fpic { font-size: 64px; line-height: 1.1; }
+  .fhint { font-size: 12px; color: #7a6a1f; font-weight: 700; }
+  .fko { font-size: 27px; font-weight: 900; color: #23414d; }
+  .from { font-size: 15px; font-weight: 800; color: #1f5f74; }
+  .fen { font-size: 13px; color: #5b7a87; }
+  .fhear { margin-top: 6px; border: 2px solid #e3c93f; background: #ffd94d; color: #6b5900; font-family: inherit; font-weight: 900; font-size: 13px; border-radius: 999px; padding: 6px 12px; cursor: pointer; }
   .quizchoices .vowel.right { outline: 4px solid #2e9e5b; outline-offset: 1px; }
   .quizchoices .vowel.wrong { outline: 4px solid #e5322d; outline-offset: 1px; }
   .kform { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
@@ -155,11 +169,11 @@
     <h2>First words to read</h2>
     <p><b>Tap any word to hear it</b> and see how it is said.</p>
     <div class="words">
-      <div class="word" data-say="라디오" data-show="라디오 · ra-di-o · radio"><b>라디오</b><span>radio</span></div>
-      <div class="word" data-say="레고" data-show="레고 · re-go · Lego"><b>레고</b><span>Lego</span></div>
-      <div class="word" data-say="미래" data-show="미래 · mi-rae · future"><b>미래</b><span>future</span></div>
-      <div class="word" data-say="비누" data-show="비누 · bi-nu · soap"><b>비누</b><span>soap</span></div>
-      <div class="word" data-say="버스" data-show="버스 · beo-seu · bus"><b>버스</b><span>bus</span></div>
+      <div class="word" data-say="라디오" data-show="라디오 · ra-di-o · radio"><b>라디오</b><span class="wrom">ra-di-o</span><span>radio</span></div>
+      <div class="word" data-say="레고" data-show="레고 · re-go · Lego"><b>레고</b><span class="wrom">re-go</span><span>Lego</span></div>
+      <div class="word" data-say="미래" data-show="미래 · mi-rae · future"><b>미래</b><span class="wrom">mi-rae</span><span>future</span></div>
+      <div class="word" data-say="비누" data-show="비누 · bi-nu · soap"><b>비누</b><span class="wrom">bi-nu</span><span>soap</span></div>
+      <div class="word" data-say="버스" data-show="버스 · beo-seu · bus"><b>버스</b><span class="wrom">beo-seu</span><span>bus</span></div>
     </div>
     <p>Small words, read block by block. 레고 being on the list will surprise exactly no one at the Pond.</p>
   </div>
@@ -168,14 +182,31 @@
     <h2>Everyday phrases</h2>
     <p><b>Tap any phrase to hear it</b> and see how it is said, syllable by syllable.</p>
     <div class="words">
-      <div class="word" data-say="안녕하세요" data-show="안녕하세요 · an-nyeong-ha-se-yo · hello (polite)"><b>안녕하세요</b><span>hello (polite)</span></div>
-      <div class="word" data-say="감사합니다" data-show="감사합니다 · gam-sa-ham-ni-da · thank you"><b>감사합니다</b><span>thank you</span></div>
-      <div class="word" data-say="네" data-show="네 · ne · yes"><b>네</b><span>yes</span></div>
-      <div class="word" data-say="아니요" data-show="아니요 · a-ni-yo · no"><b>아니요</b><span>no</span></div>
-      <div class="word" data-say="미안해요" data-show="미안해요 · mi-an-hae-yo · I am sorry"><b>미안해요</b><span>I'm sorry</span></div>
-      <div class="word" data-say="사랑해요" data-show="사랑해요 · sa-rang-hae-yo · I love you"><b>사랑해요</b><span>I love you</span></div>
-      <div class="word" data-say="안녕히 가세요" data-show="안녕히 가세요 · an-nyeong-hi ga-se-yo · goodbye"><b>안녕히 가세요</b><span>goodbye</span></div>
-      <div class="word" data-say="잘 자요" data-show="잘 자요 · jal ja-yo · good night"><b>잘 자요</b><span>good night</span></div>
+      <div class="word" data-say="안녕하세요" data-show="안녕하세요 · an-nyeong-ha-se-yo · hello (polite)"><b>안녕하세요</b><span class="wrom">an-nyeong-ha-se-yo</span><span>hello (polite)</span></div>
+      <div class="word" data-say="감사합니다" data-show="감사합니다 · gam-sa-ham-ni-da · thank you"><b>감사합니다</b><span class="wrom">gam-sa-ham-ni-da</span><span>thank you</span></div>
+      <div class="word" data-say="네" data-show="네 · ne · yes"><b>네</b><span class="wrom">ne</span><span>yes</span></div>
+      <div class="word" data-say="아니요" data-show="아니요 · a-ni-yo · no"><b>아니요</b><span class="wrom">a-ni-yo</span><span>no</span></div>
+      <div class="word" data-say="미안해요" data-show="미안해요 · mi-an-hae-yo · I am sorry"><b>미안해요</b><span class="wrom">mi-an-hae-yo</span><span>I'm sorry</span></div>
+      <div class="word" data-say="사랑해요" data-show="사랑해요 · sa-rang-hae-yo · I love you"><b>사랑해요</b><span class="wrom">sa-rang-hae-yo</span><span>I love you</span></div>
+      <div class="word" data-say="안녕히 가세요" data-show="안녕히 가세요 · an-nyeong-hi ga-se-yo · goodbye"><b>안녕히 가세요</b><span class="wrom">an-nyeong-hi ga-se-yo</span><span>goodbye</span></div>
+      <div class="word" data-say="잘 자요" data-show="잘 자요 · jal ja-yo · good night"><b>잘 자요</b><span class="wrom">jal ja-yo</span><span>good night</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>🃏 Flashcards</h2>
+    <p>Look at the picture, guess the Korean, then tap the card to flip it over and check. The back always shows the word both ways: the written sound and the Hangul.</p>
+    <div class="fcards">
+      <div class="fcard"><div class="finner"><div class="fface ffront"><div class="fpic">📻</div><div class="fhint">tap to flip</div></div><div class="fface fback"><div class="fko">라디오</div><div class="from">ra-di-o</div><div class="fen">radio</div><button type="button" class="fhear" data-say="라디오" data-show="라디오 · ra-di-o · radio">🔊 Hear it</button></div></div></div>
+      <div class="fcard"><div class="finner"><div class="fface ffront"><div class="fpic">🧱</div><div class="fhint">tap to flip</div></div><div class="fface fback"><div class="fko">레고</div><div class="from">re-go</div><div class="fen">Lego</div><button type="button" class="fhear" data-say="레고" data-show="레고 · re-go · Lego">🔊 Hear it</button></div></div></div>
+      <div class="fcard"><div class="finner"><div class="fface ffront"><div class="fpic">🧼</div><div class="fhint">tap to flip</div></div><div class="fface fback"><div class="fko">비누</div><div class="from">bi-nu</div><div class="fen">soap</div><button type="button" class="fhear" data-say="비누" data-show="비누 · bi-nu · soap">🔊 Hear it</button></div></div></div>
+      <div class="fcard"><div class="finner"><div class="fface ffront"><div class="fpic">🚌</div><div class="fhint">tap to flip</div></div><div class="fface fback"><div class="fko">버스</div><div class="from">beo-seu</div><div class="fen">bus</div><button type="button" class="fhear" data-say="버스" data-show="버스 · beo-seu · bus">🔊 Hear it</button></div></div></div>
+      <div class="fcard"><div class="finner"><div class="fface ffront"><div class="fpic">🥛</div><div class="fhint">tap to flip</div></div><div class="fface fback"><div class="fko">우유</div><div class="from">u-yu</div><div class="fen">milk</div><button type="button" class="fhear" data-say="우유" data-show="우유 · u-yu · milk">🔊 Hear it</button></div></div></div>
+      <div class="fcard"><div class="finner"><div class="fface ffront"><div class="fpic">💧</div><div class="fhint">tap to flip</div></div><div class="fface fback"><div class="fko">물</div><div class="from">mul</div><div class="fen">water</div><button type="button" class="fhear" data-say="물" data-show="물 · mul · water">🔊 Hear it</button></div></div></div>
+      <div class="fcard"><div class="finner"><div class="fface ffront"><div class="fpic">🍎</div><div class="fhint">tap to flip</div></div><div class="fface fback"><div class="fko">사과</div><div class="from">sa-gwa</div><div class="fen">apple</div><button type="button" class="fhear" data-say="사과" data-show="사과 · sa-gwa · apple">🔊 Hear it</button></div></div></div>
+      <div class="fcard"><div class="finner"><div class="fface ffront"><div class="fpic">📖</div><div class="fhint">tap to flip</div></div><div class="fface fback"><div class="fko">책</div><div class="from">chaek</div><div class="fen">book</div><button type="button" class="fhear" data-say="책" data-show="책 · chaek · book">🔊 Hear it</button></div></div></div>
+      <div class="fcard"><div class="finner"><div class="fface ffront"><div class="fpic">🪑</div><div class="fhint">tap to flip</div></div><div class="fface fback"><div class="fko">의자</div><div class="from">ui-ja</div><div class="fen">chair</div><button type="button" class="fhear" data-say="의자" data-show="의자 · ui-ja · chair">🔊 Hear it</button></div></div></div>
+      <div class="fcard"><div class="finner"><div class="fface ffront"><div class="fpic">🚗</div><div class="fhint">tap to flip</div></div><div class="fface fback"><div class="fko">자동차</div><div class="from">ja-dong-cha</div><div class="fen">car</div><button type="button" class="fhear" data-say="자동차" data-show="자동차 · ja-dong-cha · car">🔊 Hear it</button></div></div></div>
     </div>
   </div>
 
@@ -239,7 +270,7 @@
     if (!soundOn) return;
     say(text);
   }
-  var CLIPS = { "아": "a", "야": "ya", "어": "eo", "여": "yeo", "오": "o", "요": "yo", "우": "u", "유": "yu", "으": "eu", "이": "i", "라디오": "radio", "레고": "lego", "미래": "mirae", "비누": "binoo", "버스": "bus", "사랑": "sarang", "여자": "yeoja", "우유": "uyu", "가": "ga", "나": "na", "다": "da", "라": "ra", "마": "ma", "바": "ba", "사": "sa", "자": "ja", "차": "cha", "카": "ka", "타": "ta", "파": "pa", "하": "ha", "까": "kka", "따": "tta", "빠": "ppa", "싸": "ssa", "짜": "jja", "애": "ae", "얘": "yae", "에": "e", "예": "ye", "와": "wa", "왜": "wae", "외": "oe", "워": "wo", "웨": "we", "위": "wi", "의": "ui", "안녕하세요": "hello", "감사합니다": "gamsa", "네": "ne", "아니요": "aniyo", "미안해요": "mian", "사랑해요": "saranghae", "안녕히 가세요": "bye", "잘 자요": "goodnight" };
+  var CLIPS = { "아": "a", "야": "ya", "어": "eo", "여": "yeo", "오": "o", "요": "yo", "우": "u", "유": "yu", "으": "eu", "이": "i", "라디오": "radio", "레고": "lego", "미래": "mirae", "비누": "binoo", "버스": "bus", "사랑": "sarang", "여자": "yeoja", "우유": "uyu", "가": "ga", "나": "na", "다": "da", "라": "ra", "마": "ma", "바": "ba", "사": "sa", "자": "ja", "차": "cha", "카": "ka", "타": "ta", "파": "pa", "하": "ha", "까": "kka", "따": "tta", "빠": "ppa", "싸": "ssa", "짜": "jja", "애": "ae", "얘": "yae", "에": "e", "예": "ye", "와": "wa", "왜": "wae", "외": "oe", "워": "wo", "웨": "we", "위": "wi", "의": "ui", "안녕하세요": "hello", "감사합니다": "gamsa", "네": "ne", "아니요": "aniyo", "미안해요": "mian", "사랑해요": "saranghae", "안녕히 가세요": "bye", "잘 자요": "goodnight", "물": "mul", "사과": "sagwa", "책": "chaek", "의자": "uija", "자동차": "jadongcha" };
   var player = null;
   function playClip(path) {
     try {
@@ -414,6 +445,14 @@
     });
   }).catch(function () {});
 })();
+</script>
+<script>
+document.querySelectorAll(".fcard").forEach(function (card) {
+  card.addEventListener("click", function (e) {
+    if (e.target.closest && e.target.closest("[data-say]")) return;
+    card.classList.toggle("flip");
+  });
+});
 </script>
 <script src="site-nav.js"></script>
 </body>
