@@ -6339,5 +6339,337 @@ hot sauce</p>
 </script>
 <script type="module" src="auth-pill.js"></script>
 <script src="site-nav.js"></script>
+<script>
+(function () {
+  "use strict";
+  var css = [
+    ".rhelp-launch{position:fixed;right:12px;bottom:84px;z-index:10080;background:#ffd94d;border:2px solid #e3c93f;color:#6b5900;font-family:inherit;font-weight:900;font-size:14.5px;border-radius:999px;padding:11px 16px;box-shadow:0 8px 22px rgba(35,65,77,.35);cursor:pointer;}",
+    ".rhelp-teaser{position:fixed;right:12px;bottom:140px;z-index:10085;background:#fff;border:2px solid #bcd9e4;border-radius:16px;box-shadow:0 12px 32px rgba(35,65,77,.3);padding:12px 14px;width:min(86vw,300px);color:#23414d;font-size:14px;line-height:1.45;}",
+    ".rhelp-teaser p{margin:0 0 8px;}",
+    ".rhelp-teaser .prow{margin-top:4px;}",
+    ".rhelp-panel{position:fixed;right:12px;bottom:84px;z-index:10090;width:min(94vw,384px);height:min(72vh,580px);background:#fff;border-radius:20px;box-shadow:0 18px 44px rgba(10,25,32,.4);display:none;flex-direction:column;overflow:hidden;border:2px solid #bcd9e4;}",
+    ".rhelp-panel.show{display:flex;}",
+    "@media (max-width:520px){.rhelp-panel{left:12px;width:auto;}}",
+    ".rhelp-head{background:#1f5f74;color:#fff;padding:12px 14px;}",
+    ".rhelp-head .t{font-weight:900;font-size:16.5px;display:flex;align-items:center;gap:8px;}",
+    ".rhelp-head .ctx{font-size:12.5px;opacity:.92;margin-top:3px;line-height:1.4;}",
+    ".rhelp-x{margin-left:auto;background:rgba(255,255,255,.16);border:none;color:#fff;width:30px;height:30px;border-radius:50%;font-weight:900;cursor:pointer;font-family:inherit;flex:none;}",
+    ".rhelp-msgs{flex:1;overflow-y:auto;padding:12px;background:#f4fafc;display:flex;flex-direction:column;gap:8px;}",
+    ".rmsg{max-width:88%;padding:9px 12px;border-radius:14px;font-size:14px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;}",
+    ".rmsg.bot{background:#fff;border:1.5px solid #d7e6ec;color:#23414d;align-self:flex-start;border-bottom-left-radius:4px;}",
+    ".rmsg.me{background:#1f5f74;color:#fff;align-self:flex-end;border-bottom-right-radius:4px;}",
+    ".rhelp-chips{display:flex;gap:6px;flex-wrap:wrap;padding:8px 10px;background:#fff;border-top:1px solid #e3eff4;}",
+    ".rchip{border:2px solid #bcd9e4;background:#eaf7fb;color:#1f5f74;font-family:inherit;font-weight:800;font-size:12.5px;border-radius:999px;padding:6px 11px;cursor:pointer;}",
+    ".rhelp-form{display:flex;gap:6px;padding:10px;background:#fff;border-top:1px solid #e3eff4;}",
+    ".rhelp-form input{flex:1;border:2px solid #bcd9e4;border-radius:12px;padding:10px;font-size:15px;font-family:inherit;min-width:0;}",
+    ".rhelp-form button{background:#ffd94d;border:2px solid #e3c93f;color:#6b5900;font-family:inherit;font-weight:900;font-size:14px;border-radius:12px;padding:10px 14px;cursor:pointer;}",
+    "@media print{.rhelp-launch,.rhelp-teaser,.rhelp-panel{display:none !important;}}"
+  ].join("\n");
+  var st = document.createElement("style"); st.textContent = css; document.head.appendChild(st);
+  function esc(t) { return String(t).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+
+  var launch = document.createElement("button");
+  launch.className = "rhelp-launch"; launch.type = "button";
+  launch.textContent = "🦆 Recipe help";
+  launch.setAttribute("aria-label", "Open the recipe helper chat");
+  document.body.appendChild(launch);
+
+  var teaser = document.createElement("div");
+  teaser.className = "rhelp-teaser"; teaser.style.display = "none";
+  teaser.innerHTML = "<p><strong>Hi! Need any help?</strong><br>Ask me about swaps, pans, oven temps, halving a recipe, or leftovers.</p>" +
+    '<div class="prow"><button class="cookbtn" data-t-open>Ask a question</button><button class="cookbtn" data-t-no>Not now</button></div>';
+  document.body.appendChild(teaser);
+  var seenTeaser = false;
+  try { seenTeaser = sessionStorage.getItem("tydHelpTeaser") === "1"; } catch (e) {}
+  function markTeaser() { try { sessionStorage.setItem("tydHelpTeaser", "1"); } catch (e) {} }
+  setTimeout(function () { if (!seenTeaser && !panel.classList.contains("show")) { teaser.style.display = "block"; markTeaser(); } }, 1600);
+  teaser.querySelector("[data-t-open]").addEventListener("click", function () { teaser.style.display = "none"; openPanel(); });
+  teaser.querySelector("[data-t-no]").addEventListener("click", function () { teaser.style.display = "none"; });
+
+  var panel = document.createElement("div");
+  panel.className = "rhelp-panel";
+  panel.innerHTML = '<div class="rhelp-head"><div class="t">🦆 Recipe Helper <button class="rhelp-x" aria-label="Close">✕</button></div><div class="ctx" data-ctx></div></div>' +
+    '<div class="rhelp-msgs" data-msgs></div>' +
+    '<div class="rhelp-chips">' +
+    '<button class="rchip" data-chip="swap">🔀 Swap an ingredient</button>' +
+    '<button class="rchip" data-chip="dairy">🥛 Dairy-free</button>' +
+    '<button class="rchip" data-chip="gluten">🌾 Gluten-free</button>' +
+    '<button class="rchip" data-chip="halve">½ Halve it</button>' +
+    '<button class="rchip" data-chip="double">✖2 Double it</button>' +
+    '<button class="rchip" data-chip="pan">🍳 Pan swap</button>' +
+    '<button class="rchip" data-chip="temp">🌡️ Oven temp</button>' +
+    '<button class="rchip" data-chip="leftovers">🧊 Leftovers</button>' +
+    "</div>" +
+    '<form class="rhelp-form"><input type="text" placeholder="Ask about this recipe..." aria-label="Ask about this recipe"><button type="submit">Send</button></form>';
+  document.body.appendChild(panel);
+  var msgs = panel.querySelector("[data-msgs]");
+  var ctxEl = panel.querySelector("[data-ctx]");
+  var input = panel.querySelector("input");
+  var greeted = false, pending = null, lastId = null;
+
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest ? e.target.closest(".tile") : null;
+    if (t && t.getAttribute("data-for")) { lastId = t.getAttribute("data-for"); if (panel.classList.contains("show")) refreshCtx(); }
+  });
+
+  function currentCard() {
+    var inDetail = document.querySelector(".detail .recipe-card");
+    if (inDetail) return inDetail;
+    if (lastId) { var c = document.getElementById(lastId); if (c) return c; }
+    return null;
+  }
+  function recipeData() {
+    var card = currentCard();
+    if (!card) return null;
+    var ings = [], dirs = [];
+    var ul = card.querySelector("ul");
+    if (ul) ul.querySelectorAll("li").forEach(function (li) { ings.push(li.textContent.trim()); });
+    var ol = card.querySelector("ol");
+    if (ol) ol.querySelectorAll("li").forEach(function (li) { dirs.push(li.textContent.trim()); });
+    var notes = "";
+    card.querySelectorAll("h3").forEach(function (h) {
+      if (/^notes$/i.test(h.textContent.trim())) {
+        var p = h.nextElementSibling;
+        if (p) notes = p.textContent.trim();
+      }
+    });
+    var sv = card.querySelector(".svnum");
+    var meta = card.querySelector(".meta");
+    return {
+      id: card.id,
+      name: card.querySelector("h2") ? card.querySelector("h2").textContent.trim() : "this recipe",
+      cats: card.getAttribute("data-cats") || "",
+      ings: ings, dirs: dirs, notes: notes,
+      servings: sv ? sv.textContent.trim() : (meta ? meta.textContent.trim() : "")
+    };
+  }
+  function addMsg(text, who) {
+    var d = document.createElement("div");
+    d.className = "rmsg " + who;
+    d.innerHTML = esc(text).replace(/\n/g, "<br>");
+    msgs.appendChild(d);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+  function refreshCtx() {
+    var r = recipeData();
+    ctxEl.textContent = r ? ("You are looking at: " + r.name + ". I will answer for this recipe.") : "Open a recipe and I can answer for that exact dish, or ask me anything general.";
+    return r;
+  }
+  function openPanel() {
+    teaser.style.display = "none";
+    panel.classList.add("show");
+    var r = refreshCtx();
+    if (!greeted) {
+      greeted = true;
+      addMsg(r ? ("Hi! You are looking at " + r.name + ". Ask me things like \u201CCan I use oil instead of butter?\u201D or \u201CCan I halve it?\u201D, or tap a button below.") : "Hi! Open any recipe and I can help with that exact dish: swaps, pans, temps, halving, leftovers. Or ask a general cooking question now.", "bot");
+    }
+    setTimeout(function () { input.focus(); }, 60);
+  }
+  launch.addEventListener("click", openPanel);
+  panel.querySelector(".rhelp-x").addEventListener("click", function () { panel.classList.remove("show"); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") panel.classList.remove("show"); });
+
+  var SUBS = [
+    { keys: ["butter", "ghee"], text: "Use the same amount of melted coconut oil or a neutral oil for cooking and most baking. Vegan butter sticks also swap 1 to 1 and keep the flavor closer. If your butter is salted and the recipe says unsalted, skip a pinch of the recipe's salt." },
+    { keys: ["vegetable oil", "canola oil", "olive oil", "oil"], text: "Oils swap 1 to 1 with each other for cooking. Melted butter swaps 1 to 1 in baking and adds richness. For muffins and quick breads, you can replace up to half the oil with unsweetened applesauce for a lighter result." },
+    { keys: ["buttermilk"], text: "Make your own: 1 cup milk plus 1 tablespoon lemon juice or white vinegar, rested 5 to 10 minutes until slightly curdled. Plain yogurt thinned with a little milk also swaps 1 to 1." },
+    { keys: ["heavy cream", "double cream", "whipping cream", "cream"], text: "For sauces and soups, half and half works but the result is thinner, so simmer a little longer. Coconut cream swaps 1 to 1 and is the best dairy-free pick. Evaporated milk also works in cooked dishes." },
+    { keys: ["milk"], text: "Oat, soy, or almond milk swap 1 to 1 in almost everything. For richer sauces use half and half. In baking, buttermilk swaps 1 to 1 and adds tenderness." },
+    { keys: ["egg", "eggs"], text: "For binding in muffins, meatballs, and casseroles, 1 egg = a flax egg (1 tablespoon ground flaxseed + 3 tablespoons water, rested 5 minutes) or 1/4 cup unsweetened applesauce or mashed banana. Those will not work for omelets, meringues, or custards, which really need eggs." },
+    { keys: ["self-raising flour", "self rising flour", "flour"], text: "For self-raising flour, use 1 cup all-purpose flour + 1 1/2 teaspoons baking powder + 1/4 teaspoon salt for each cup. Cake flour makes a lighter crumb. A 1 to 1 gluten-free flour blend is the safest gluten-free swap; weigh it if you can and let the batter rest 10 minutes." },
+    { keys: ["caster sugar", "granulated sugar", "brown sugar", "sugar"], text: "Brown sugar swaps 1 to 1 and adds moisture and a caramel note; pack it into the cup. Caster sugar is just finer granulated sugar, so regular granulated works 1 to 1. For honey or maple syrup, use about 3/4 cup per 1 cup sugar and cut other liquids by a few spoonfuls." },
+    { keys: ["cornstarch", "corn starch", "cornflour"], text: "Arrowroot or potato starch swap 1 to 1 and keep sauces glossy. Flour also thickens, but you need about double the amount, an extra minute or two of simmering, and the sauce will look matte instead of shiny." },
+    { keys: ["chicken stock", "chicken broth", "vegetable stock", "stock", "broth"], text: "Vegetable stock swaps 1 to 1 for chicken stock. Water plus a bouillon cube or paste is next best. Plain water works in a pinch; add a pinch more salt and a splash of soy sauce for depth." },
+    { keys: ["parmesan", "cheddar", "mozzarella", "cheese"], text: "For melting, mozzarella, Monterey Jack, and mild cheddar swap for each other 1 to 1. Parmesan can be swapped with pecorino or Grana Padano. For dairy-free cheesy flavor, nutritional yeast helps in sauces but will not melt or stretch." },
+    { keys: ["sour cream"], text: "Plain Greek yogurt swaps 1 to 1 in dips, toppings, and baking. In hot sauces, stir it in at the very end so it does not split. Crème fraîche is richer and more heat-stable." },
+    { keys: ["yogurt", "yoghurt"], text: "Sour cream swaps 1 to 1 in baking and dips. For marinades, buttermilk also works. Use plain, unsweetened yogurt whenever a recipe just says yogurt." },
+    { keys: ["lemon juice", "lemon", "lime"], text: "Bottled lemon juice swaps 1 to 1, and lime juice works with a slightly different flavor. For just a touch of acidity in a sauce, start with half as much white wine vinegar or apple cider vinegar." },
+    { keys: ["garlic"], text: "One clove is roughly 1/8 teaspoon garlic powder; go easy, it is stronger than it looks. Garlic-infused oil gives the flavor without the pieces. Shallot is milder and sweeter." },
+    { keys: ["onion", "shallot"], text: "Shallots are milder and swap about 1 to 1 by volume. Leeks or the green tops of scallions also work. In cooked dishes, 1 tablespoon onion powder roughly equals one medium onion." },
+    { keys: ["soy sauce"], text: "Tamari swaps 1 to 1 and is usually gluten-free. Coconut aminos are sweeter and less salty, so you may want a pinch more salt. Worcestershire sauce is not a true swap; it is tangier and sweeter." },
+    { keys: ["honey"], text: "Maple syrup or agave swap 1 to 1 in dressings, glazes, and drinks. In baking they add a little extra liquid, which most muffin and cake recipes handle fine." },
+    { keys: ["baking powder"], text: "To replace 1 teaspoon baking powder, use 1/4 teaspoon baking soda + 1/2 teaspoon cream of tartar, and bake promptly. Baking soda alone is not a swap; it needs an acid to work." },
+    { keys: ["breadcrumbs", "breadcrumb", "panko"], text: "Panko and regular breadcrumbs swap 1 to 1; panko stays crunchier. Crushed crackers, cornflakes, or pulsed rolled oats also work for coatings and toppings." }
+  ];
+  function findSub(name) {
+    var n = " " + name.toLowerCase() + " ";
+    for (var i = 0; i < SUBS.length; i++) {
+      for (var j = 0; j < SUBS[i].keys.length; j++) {
+        if (n.indexOf(SUBS[i].keys[j]) >= 0) return SUBS[i];
+      }
+    }
+    return null;
+  }
+  function recipeLineFor(r, name) {
+    if (!r) return null;
+    var words = name.toLowerCase().split(/\s+/).filter(function (w) { return w.length > 2; });
+    for (var i = 0; i < r.ings.length; i++) {
+      var line = r.ings[i].toLowerCase();
+      for (var j = 0; j < words.length; j++) { if (line.indexOf(words[j]) >= 0) return r.ings[i]; }
+    }
+    return null;
+  }
+  function cleanName(name) { return String(name).replace(/^\s*(the\s+)?/, "").replace(/[?.!\s]+$/, ""); }
+  function subAnswer(name, r) {
+    name = cleanName(name);
+    var entry = findSub(name);
+    var line = recipeLineFor(r, name);
+    var head = line ? ("This recipe uses: " + line + ".\n") : "";
+    if (entry) return head + entry.text;
+    return head + "I do not have a set swap for " + name + " yet. A safe rule: swap like for like (fat for fat, liquid for liquid, sweetener for sweetener) at the same amount, and expect the texture to change a little. For eggs, flour, and leavening, be more careful, those hold the recipe together.";
+  }
+  var DAIRY = [["butter", "oil or vegan butter, same amount"], ["buttermilk", "plant milk + 1 tablespoon lemon juice per cup"], ["sour cream", "dairy-free sour cream or coconut yogurt, same amount"], ["cream", "coconut cream, same amount"], ["cheese", "dairy-free cheese, or nutritional yeast for flavor"], ["yogurt", "coconut or soy yogurt, same amount"], ["milk", "oat or soy milk, same amount"]];
+  var GLUTEN = [["soy sauce", "tamari, same amount"], ["breadcrumbs", "gluten-free breadcrumbs or crushed rice cereal"], ["panko", "gluten-free panko or crushed rice cereal"], ["flour", "a 1 to 1 gluten-free flour blend"], ["pasta", "gluten-free pasta, cook a minute less"], ["noodle", "rice noodles or gluten-free pasta"], ["couscous", "quinoa or rice"]];
+  function freeFromAnswer(r, terms, kind) {
+    if (!r) return "Open a recipe first and I will check its exact ingredient list for you.";
+    var found = [];
+    r.ings.forEach(function (line) {
+      var low = line.toLowerCase();
+      for (var i = 0; i < terms.length; i++) {
+        if (low.indexOf(terms[i][0]) >= 0) { found.push("• " + line + " → swap with " + terms[i][1]); break; }
+      }
+    });
+    if (!found.length) return "Good news: I do not see any obvious " + kind + " in " + r.name + "'s ingredient list. Still check packaged items like stock, chocolate, sauces, and spice blends, those can hide it.";
+    return "In " + r.name + ", these are the " + kind + " items to change:\n" + found.join("\n") + "\nAlways double-check labels on packaged foods, brands differ.";
+  }
+  function tempAnswer(r) {
+    var text = r ? r.dirs.join(" ") : "";
+    var out = [];
+    var reC = /(\d{2,3})\s?°?\s?C\b/g, m;
+    while ((m = reC.exec(text))) { var f = Math.round(parseInt(m[1], 10) * 9 / 5 + 32); out.push(m[1] + "°C is about " + f + "°F."); }
+    var reF = /(\d{2,3})\s?°?\s?F\b/g;
+    while ((m = reF.exec(text))) { var c = Math.round((parseInt(m[1], 10) - 32) * 5 / 9); out.push(m[1] + "°F is about " + c + "°C."); }
+    if (out.length) return "From this recipe's directions: " + out.join(" ") + " The US / Metric button above the recipes also converts the temps in the directions for you.";
+    return "I do not see an oven temperature in this recipe's directions. Handy defaults: most cakes and cookies bake at 350 to 375°F (175 to 190°C), roasting usually runs 400 to 425°F (200 to 220°C). The US / Metric button above the recipes converts temps in the directions too.";
+  }
+  function timeAnswer(r) {
+    if (!r) return "Open a recipe and I will pull the times from its directions.";
+    var found = [];
+    var re = /\d+(?:\s?-\s?\d+)?\s?(?:minutes|minute|mins|min|hours|hour|hrs)\b/gi, m;
+    var all = r.dirs.join(" ");
+    while ((m = re.exec(all))) { if (found.indexOf(m[0]) < 0) found.push(m[0]); }
+    if (!found.length) return "The directions for " + r.name + " do not give exact minutes. Cook to the doneness cues in the steps, color, tenderness, and a clean toothpick for bakes, rather than the clock.";
+    return "Times mentioned in " + r.name + "'s directions: " + found.join(", ") + ". Treat them as a guide and trust the doneness cues in the steps, ovens and stovetops vary.";
+  }
+  function panAnswer(r) {
+    var mentions = [];
+    if (r) {
+      var all = (r.ings.join(" ") + " " + r.dirs.join(" ")).toLowerCase();
+      ["muffin tin", "loaf pan", "9x13", "9 x 13", "8-inch", "9-inch", "round pan", "square pan", "skillet", "dutch oven", "baking dish", "sheet pan", "casserole"].forEach(function (p) { if (all.indexOf(p) >= 0) mentions.push(p); });
+    }
+    var extra = mentions.length ? ("This recipe mentions: " + mentions.join(", ") + ". ") : "";
+    if (mentions.indexOf("muffin tin") >= 0) extra += "The same batter works in a lined loaf or round pan; it will need longer, so check the center with a toothpick. ";
+    return extra + "General pan rules: keep the food at a similar depth. A wider, shallower pan cooks faster; a deeper one needs more time in the center. Fill cake pans about 2/3 full and start checking 5 to 10 minutes early. In a glass dish, drop the oven by about 25°F (15°C) versus metal.";
+  }
+  function scaleAnswer(r, halve) {
+    var stepper = r ? " Easiest: use the Servings − and + buttons on " + r.name + " and the ingredient amounts update for you." : " Open the recipe and use its Servings − and + buttons; the ingredient amounts update for you.";
+    if (halve) return "To halve it: divide every ingredient by 2 and keep the oven temperature the same." + stepper + " Use a smaller pan if you have one, and start checking doneness 5 to 10 minutes early. Half an egg: beat one egg and use about 1 1/2 tablespoons.";
+    return "To double it: multiply every ingredient by 2 and keep the oven temperature the same." + stepper + " Use a bigger pan so the depth stays similar, and expect some extra cooking time. Do not double a recipe more than once without care; leavening and seasoning get tricky at big sizes.";
+  }
+  function storageAnswer(r) {
+    var tail = "";
+    if (r) {
+      var cats = r.cats.toLowerCase();
+      if (cats.indexOf("soup") >= 0) tail = " Soups and stews freeze especially well.";
+      else if (cats.indexOf("dessert") >= 0 || cats.indexOf("cookies") >= 0) tail = " Baked goods keep 1 to 2 days in an airtight container on the counter, or freeze them for later.";
+    }
+    return "Leftovers, the safe basics: cool food within 2 hours and store it in shallow, covered containers. Most cooked dishes keep 3 to 4 days in the fridge. Freeze for 2 to 3 months for best quality. Reheat leftovers until steaming hot, about 165°F (74°C), and when in doubt, throw it out." + tail;
+  }
+  function answer(qRaw) {
+    var q = qRaw.trim();
+    var low = " " + q.toLowerCase() + " ";
+    var r = refreshCtxSilent();
+    if (pending === "ingredient") {
+      pending = null;
+      return notesAnswer(q) || subAnswer(q, r);
+    }
+    function notesAnswer(target) {
+      if (!r || !r.notes || !target) return null;
+      target = cleanName(target);
+      var words = target.toLowerCase().split(/\s+/).filter(function (w) { return w.length > 3; });
+      if (!words.length) return null;
+      var sentences = r.notes.match(/[^.!?]+[.!?]+/g) || [r.notes];
+      for (var i = 0; i < sentences.length; i++) {
+        var sLow = sentences[i].toLowerCase();
+        if (sLow.length > 240) continue;
+        if (!/(replac|substitut|instead|swap)/.test(sLow)) continue;
+        for (var j = 0; j < words.length; j++) { if (sLow.indexOf(words[j]) >= 0) return "This recipe's own notes say: " + sentences[i].trim(); }
+      }
+      return null;
+    }
+    var mUse = low.match(/use\s+(.+?)\s+instead of\s+(.+?)[?.!]*$/);
+    if (mUse) { var tUse = mUse[2].trim(); return notesAnswer(tUse) || subAnswer(tUse, r); }
+    var mSub = low.match(/(?:substitute|substitution|swap|replace)(?:\s+for)?\s+(.+?)[?.!]*$/) || low.match(/don'?t have\s+(.+?)[?.!]*$/) || low.match(/out of\s+(.+?)[?.!]*$/) || low.match(/no\s+([a-z][a-z ]{2,24}?)[?.!]*$/);
+    if (mSub) { var tSub = mSub[1].trim(); return notesAnswer(tSub) || subAnswer(tSub, r); }
+    if (/(swap|substitut|replac|instead)/.test(low)) {
+      for (var k = 0; k < SUBS.length; k++) {
+        for (var n = 0; n < SUBS[k].keys.length; n++) {
+          if (low.indexOf(SUBS[k].keys[n]) >= 0) return notesAnswer(SUBS[k].keys[n]) || subAnswer(SUBS[k].keys[n], r);
+        }
+      }
+      pending = "ingredient";
+      return "Happy to help with a swap. Which ingredient do you want to substitute? Type its name, like butter or eggs.";
+    }
+    if (/(dairy|lactose)/.test(low)) return freeFromAnswer(r, DAIRY, "dairy");
+    if (/(gluten|celiac|wheat[ -]?free)/.test(low)) return freeFromAnswer(r, GLUTEN, "gluten");
+    if (/(halv|half of|smaller batch|scale down|make less)/.test(low)) return scaleAnswer(r, true);
+    if (/(doubl|twice as much|bigger batch|scale up|feed more)/.test(low)) return scaleAnswer(r, false);
+    if (/(leftover|store|fridge|freeze|freezer|reheat|how long does it keep|keep in the)/.test(low)) return storageAnswer(r);
+    if (/(pan|tin|loaf|skillet|dish|casserole|bakeware|muffin)/.test(low)) return panAnswer(r);
+    if (/(temp|fahrenheit|celsius|degrees|gas mark|how hot|oven)/.test(low)) return tempAnswer(r);
+    if (/(how long|cook time|bake time|total time|ready in)/.test(low)) return timeAnswer(r);
+    var mSkip = low.match(/(?:skip|leave out|omit|without|do i need|can i leave out)\s+(?:the\s+)?(.+?)[?.!]*$/);
+    if (mSkip) {
+      var nm = mSkip[1].trim();
+      var line = recipeLineFor(r, nm);
+      if (line && /optional/i.test(line)) return "Yes, you can skip it. This recipe lists it as optional: " + line + ".";
+      if (findSub(nm) && /(egg|flour|baking powder|butter|milk|sugar)/.test(nm)) return "That one is doing real work in this recipe, so leaving it out entirely will change the result. " + subAnswer(nm, r);
+      return "You can usually leave out " + nm + " or cut it back; it is most likely there for flavor or texture. The dish will taste a little different, but it should still work.";
+    }
+    var mHave = low.match(/(?:does it have|is there|contain)\s+(.+?)[?.!]*$/);
+    if (mHave) {
+      var foundLine = recipeLineFor(r, mHave[1].trim());
+      if (!r) return "Open the recipe and I will check its ingredient list for you.";
+      return foundLine ? ("Yes, " + r.name + " uses: " + foundLine + ".") : ("I do not see " + mHave[1].trim() + " in " + r.name + "'s ingredient list.");
+    }
+    if (/(serv|yield|how many|feed)/.test(low) && r) return r.name + " says: " + (r.servings ? r.servings : "see the top of the recipe") + ". Use the Servings − and + buttons on the recipe to scale the ingredient amounts up or down.";
+    return "I can help with swaps (try \u201Cswap butter\u201D or \u201Ccan I use oil instead of butter?\u201D), dairy-free and gluten-free changes, halving or doubling, pan swaps, oven temps, cook times, and leftovers." + (r ? " For " + r.name + ", tap a button below or type an ingredient name." : " Open a recipe first and I can answer about that exact dish.");
+  }
+  function refreshCtxSilent() { return recipeData(); }
+  panel.querySelectorAll("[data-chip]").forEach(function (chip) {
+    chip.addEventListener("click", function () {
+      var kind = chip.getAttribute("data-chip");
+      var r = recipeData();
+      if (kind === "swap") {
+        addMsg("Swap an ingredient", "me");
+        if (!r) { addMsg("Open a recipe first, then tell me the ingredient. Or type any ingredient name now and I will give you the general swap.", "bot"); pending = "ingredient"; return; }
+        addMsg("Which ingredient in " + r.name + " do you want to swap? Type its name, like butter or eggs.", "bot");
+        pending = "ingredient";
+        input.focus();
+        return;
+      }
+      var label = chip.textContent;
+      addMsg(label, "me");
+      if (kind === "dairy") addMsg(freeFromAnswer(r, DAIRY, "dairy"), "bot");
+      else if (kind === "gluten") addMsg(freeFromAnswer(r, GLUTEN, "gluten"), "bot");
+      else if (kind === "halve") addMsg(scaleAnswer(r, true), "bot");
+      else if (kind === "double") addMsg(scaleAnswer(r, false), "bot");
+      else if (kind === "pan") addMsg(panAnswer(r), "bot");
+      else if (kind === "temp") addMsg(tempAnswer(r), "bot");
+      else if (kind === "leftovers") addMsg(storageAnswer(r), "bot");
+    });
+  });
+  panel.querySelector("form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var q = input.value;
+    if (!q.trim()) return;
+    input.value = "";
+    addMsg(q, "me");
+    addMsg(answer(q), "bot");
+    refreshCtx();
+  });
+})();
+
+</script>
 </body>
 </html>
