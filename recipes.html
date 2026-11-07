@@ -5813,6 +5813,109 @@ hot sauce</p>
 })();
 
 </script>
+<script>
+(function () {
+  // My cooking journal: per-recipe times-cooked counter, last-cooked date,
+  // and personal notes. Saved on the device and synced to the visitor's
+  // Pond Account (cookLog field), merged newest-wins per recipe.
+  var KEY = "tydCookLog";
+  function load() { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } }
+  var state = load();
+  var st = document.createElement("style");
+  st.textContent = ".journal{margin-top:12px;border-top:1.5px dashed #bcd9e4;padding-top:10px;}"
+    + ".jtoggle{background:#fff3b0;border:none;border-radius:999px;padding:7px 13px;font-weight:800;font-size:13px;color:#6b5900;cursor:pointer;font-family:inherit;}"
+    + ".jbadge{font-weight:700;color:#1e5c33;}"
+    + ".jbody{margin-top:10px;background:#fbfdfe;border:1.5px solid #e3f0f5;border-radius:12px;padding:11px 12px;}"
+    + ".jrow{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;}"
+    + ".jtimes{font-size:14px;color:#23414d;}"
+    + ".jbtn{background:#1f5f74;color:#fff;border:none;border-radius:999px;padding:7px 13px;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;}"
+    + ".jminus{background:#eaf7fb;color:#1f5f74;}"
+    + ".jlast{font-size:13px;color:#3f6b7a;margin:8px 0 0;}"
+    + ".jlab{display:block;font-size:13px;font-weight:700;color:#1f5f74;margin-top:10px;}"
+    + ".jnotes{width:100%;margin-top:5px;border:2px solid #bcd9e4;border-radius:10px;padding:9px 10px;font-size:14px;font-family:inherit;color:#23414d;background:#fff;resize:vertical;box-sizing:border-box;}";
+  document.head.appendChild(st);
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  function todayISO() { var d = new Date(); return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+  function fmtDate(iso) { try { return new Date(iso + "T12:00:00").toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric", year: "numeric" }); } catch (e) { return iso; } }
+  function entry(id) { if (!state[id]) state[id] = { count: 0, last: "", notes: "", ts: 0 }; return state[id]; }
+  function saveLocal() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+  function saveAll() { saveLocal(); schedulePush(); }
+  document.querySelectorAll(".recipe-card").forEach(function (card) {
+    var id = card.id;
+    if (!id) return;
+    var wrap = document.createElement("div");
+    wrap.className = "journal";
+    wrap.innerHTML = '<button type="button" class="jtoggle">📓 My cooking journal <span class="jbadge"></span></button>'
+      + '<div class="jbody" hidden>'
+      + '<div class="jrow"><span class="jtimes">Times cooked: <b class="jnum">0</b></span>'
+      + '<span><button type="button" class="jbtn jplus">+ I cooked this</button> <button type="button" class="jbtn jminus" title="Take one off">−</button></span></div>'
+      + '<p class="jlast"></p>'
+      + '<label class="jlab">My notes<textarea class="jnotes" rows="3" placeholder="What did you change? Who loved it? What should you remember next time?"></textarea></label>'
+      + '</div>';
+    card.appendChild(wrap);
+    var body = wrap.querySelector(".jbody"), num = wrap.querySelector(".jnum"),
+        badge = wrap.querySelector(".jbadge"), last = wrap.querySelector(".jlast"),
+        notes = wrap.querySelector(".jnotes");
+    function render() {
+      var e = entry(id);
+      num.textContent = e.count;
+      badge.textContent = e.count ? "· cooked " + e.count + "×" : "";
+      last.textContent = e.last ? "Last cooked: " + fmtDate(e.last) : "Not cooked yet. Tap + I cooked this after you make it!";
+      if (document.activeElement !== notes && notes.value !== (e.notes || "")) notes.value = e.notes || "";
+    }
+    wrap.querySelector(".jtoggle").addEventListener("click", function () { body.hidden = !body.hidden; });
+    wrap.querySelector(".jplus").addEventListener("click", function () {
+      var e = entry(id); e.count++; e.last = todayISO(); e.ts = Date.now(); saveAll(); render();
+    });
+    wrap.querySelector(".jminus").addEventListener("click", function () {
+      var e = entry(id); if (e.count > 0) e.count--; e.ts = Date.now(); saveAll(); render();
+    });
+    var nt;
+    notes.addEventListener("input", function () {
+      clearTimeout(nt);
+      nt = setTimeout(function () { var e = entry(id); e.notes = notes.value; e.ts = Date.now(); saveAll(); }, 500);
+    });
+    render();
+    card._jrender = render;
+  });
+  function renderAll() {
+    document.querySelectorAll(".recipe-card").forEach(function (c) { if (c._jrender) c._jrender(); });
+  }
+  var uid = null, fsx = null, pushT = null, merged = false;
+  function schedulePush() {
+    if (!uid || !fsx) return;
+    clearTimeout(pushT);
+    pushT = setTimeout(pushNow, 900);
+  }
+  function pushNow() {
+    if (!uid || !fsx) return;
+    fsx.setDoc(fsx.doc(fsx.db, "users", uid), { cookLog: state }, { merge: true }).catch(function () {});
+  }
+  var cfg = { apiKey: "AIzaSyDoy5WjnhDlBqZaqZDUFkX6XodiXvQmr7I", authDomain: "treatyourselfdiscounts-881a9.firebaseapp.com", projectId: "treatyourselfdiscounts-881a9", storageBucket: "treatyourselfdiscounts-881a9.firebasestorage.app", messagingSenderId: "635205549581", appId: "1:635205549581:web:698e046036b14f33f81f44" };
+  Promise.all([
+    import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js"),
+    import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js"),
+    import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js")
+  ]).then(function (mods) {
+    var app;
+    try { app = mods[0].getApp(); } catch (e) { app = mods[0].initializeApp(cfg); }
+    var auth = mods[1].getAuth(app);
+    var db = mods[2].getFirestore(app);
+    fsx = { setDoc: mods[2].setDoc, doc: mods[2].doc, db: db };
+    mods[1].onAuthStateChanged(auth, function (user) {
+      if (!user || merged) { if (!user) uid = null; return; }
+      uid = user.uid; merged = true;
+      mods[2].getDoc(mods[2].doc(db, "users", user.uid)).then(function (snap) {
+        var remote = (snap.exists() && snap.data().cookLog) || {};
+        Object.keys(remote).forEach(function (id) {
+          if (!state[id] || (remote[id].ts || 0) > (state[id].ts || 0)) state[id] = remote[id];
+        });
+        saveLocal(); renderAll(); pushNow();
+      }).catch(function () {});
+    });
+  }).catch(function () {});
+})();
+</script>
 <script type="module" src="auth-pill.js"></script>
 <script src="site-nav.js"></script>
 </body>

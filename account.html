@@ -80,6 +80,8 @@
     <div id="dashgrocery"><p style="color:#5b7d89;">No groceries yet. Add a recipe's ingredients from <a href="recipes.html" style="color:#1f5f74; font-weight:700;">Lucy's Recipes</a>.</p></div>
     <h3 style="color:#1f5f74; font-size:15px; margin:16px 0 6px;">Your meal plan</h3>
     <div id="dashplan"><p style="color:#5b7d89;">No meals planned yet. Plan one from any recipe.</p></div>
+    <h3 style="color:#1f5f74; font-size:15px; margin:16px 0 6px;">Your cooking journal</h3>
+    <div id="dashjournal"><p style="color:#5b7d89;">No cooks logged yet. Open a recipe and tap + I cooked this in its journal.</p></div>
     <h3 style="color:#1f5f74; font-size:15px; margin:16px 0 6px;">Deal alert choices 🔔</h3>
     <p style="font-size:14px;">Pick the kinds of alerts you want to see. Leave everything unchecked to see them all.</p>
     <div class="prefrow" id="alertprefs">
@@ -250,6 +252,12 @@
         return '<div class="dashitem">📅 ' + esc(label) + ' · <a href="recipes.html#' + esc(p.slug || "") + '">' + esc(p.name || "Recipe") + '</a></div>';
       }).join("");
     }
+    var journal = loadJSON("tydCookLog", {});
+    var jids = Object.keys(journal).filter(function (id) { return journal[id] && journal[id].count > 0; });
+    if (jids.length) {
+      var total = jids.reduce(function (sum, id) { return sum + (journal[id].count || 0); }, 0);
+      $("dashjournal").innerHTML = '<div class="dashitem">📓 ' + total + ' cook' + (total === 1 ? '' : 's') + ' logged across ' + jids.length + ' recipe' + (jids.length === 1 ? '' : 's') + ' · <a href="recipes.html">Open Recipes</a></div>';
+    }
     var prefs = alertPrefs();
     document.querySelectorAll("#alertprefs input").forEach(function (cb) { cb.checked = prefs.indexOf(cb.value) > -1; });
   }
@@ -273,13 +281,17 @@
       var localP = loadJSON("tydMealPlan", {}), remoteP = data.mealPlan || {}, mergedP = {};
       Object.keys(remoteP).forEach(function (k) { mergedP[k] = remoteP[k]; });
       Object.keys(localP).forEach(function (k) { mergedP[k] = localP[k]; });
+      var localJ = loadJSON("tydCookLog", {}), remoteJ = data.cookLog || {}, mergedJ = {};
+      Object.keys(remoteJ).forEach(function (id) { mergedJ[id] = remoteJ[id]; });
+      Object.keys(localJ).forEach(function (id) { if (!mergedJ[id] || (localJ[id].ts || 0) > (mergedJ[id].ts || 0)) mergedJ[id] = localJ[id]; });
       var prefs = data.alertPrefs || alertPrefs();
       try {
         localStorage.setItem("tydGrocery", JSON.stringify(mergedG));
         localStorage.setItem("tydMealPlan", JSON.stringify(mergedP));
         localStorage.setItem("tydAlertPrefs", JSON.stringify(prefs));
+        localStorage.setItem("tydCookLog", JSON.stringify(mergedJ));
       } catch (e) {}
-      setDoc(doc(db, "users", user.uid), { groceryList: mergedG, mealPlan: mergedP, alertPrefs: prefs }, { merge: true }).catch(function () {});
+      setDoc(doc(db, "users", user.uid), { groceryList: mergedG, mealPlan: mergedP, alertPrefs: prefs, cookLog: mergedJ }, { merge: true }).catch(function () {});
       renderDash();
     }).catch(function () { renderDash(); });
   }
