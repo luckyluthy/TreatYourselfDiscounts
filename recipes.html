@@ -5832,7 +5832,10 @@ hot sauce</p>
     + ".jminus{background:#eaf7fb;color:#1f5f74;}"
     + ".jlast{font-size:13px;color:#3f6b7a;margin:8px 0 0;}"
     + ".jlab{display:block;font-size:13px;font-weight:700;color:#1f5f74;margin-top:10px;}"
-    + ".jnotes{width:100%;margin-top:5px;border:2px solid #bcd9e4;border-radius:10px;padding:9px 10px;font-size:14px;font-family:inherit;color:#23414d;background:#fff;resize:vertical;box-sizing:border-box;}";
+    + ".jnotes{width:100%;margin-top:5px;border:2px solid #bcd9e4;border-radius:10px;padding:9px 10px;font-size:14px;font-family:inherit;color:#23414d;background:#fff;resize:vertical;box-sizing:border-box;}"
+    + ".jrow2{display:flex;align-items:center;gap:10px;margin-top:9px;}"
+    + ".jsave{background:#ffd94d;color:#6b5900;}"
+    + ".jstat{font-size:13px;font-weight:700;color:#1e5c33;}";
   document.head.appendChild(st);
   function pad(n) { return (n < 10 ? "0" : "") + n; }
   function todayISO() { var d = new Date(); return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
@@ -5851,11 +5854,12 @@ hot sauce</p>
       + '<span><button type="button" class="jbtn jplus">+ I cooked this</button> <button type="button" class="jbtn jminus" title="Take one off">−</button></span></div>'
       + '<p class="jlast"></p>'
       + '<label class="jlab">My notes<textarea class="jnotes" rows="3" placeholder="What did you change? Who loved it? What should you remember next time?"></textarea></label>'
+      + '<div class="jrow2"><button type="button" class="jbtn jsave">Save note</button><span class="jstat"></span></div>'
       + '</div>';
     card.appendChild(wrap);
     var body = wrap.querySelector(".jbody"), num = wrap.querySelector(".jnum"),
         badge = wrap.querySelector(".jbadge"), last = wrap.querySelector(".jlast"),
-        notes = wrap.querySelector(".jnotes");
+        notes = wrap.querySelector(".jnotes"), jstat = wrap.querySelector(".jstat");
     function render() {
       var e = entry(id);
       num.textContent = e.count;
@@ -5872,8 +5876,13 @@ hot sauce</p>
     });
     var nt;
     notes.addEventListener("input", function () {
+      jstat.textContent = "";
       clearTimeout(nt);
-      nt = setTimeout(function () { var e = entry(id); e.notes = notes.value; e.ts = Date.now(); saveAll(); }, 500);
+      nt = setTimeout(function () { var e = entry(id); e.notes = notes.value; e.ts = Date.now(); saveAll(); jstat.textContent = "Saved ✓"; }, 500);
+    });
+    wrap.querySelector(".jsave").addEventListener("click", function () {
+      var e = entry(id); e.notes = notes.value; e.ts = Date.now(); saveAll();
+      jstat.textContent = "Saved ✓";
     });
     render();
     card._jrender = render;

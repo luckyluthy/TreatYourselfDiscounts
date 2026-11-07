@@ -206,6 +206,7 @@
   fetch("search-index.json").then(function (r) { return r.json(); }).then(function (d) {
     (d.entries || []).forEach(function (e) { if (e.t === "Recipe") RECIPE_NAMES[e.href.split("#")[1]] = e.title; });
     if (lastSaved.length) renderSavedList(lastSaved);
+    renderDash();
   }).catch(function () {});
   function prettyId(id) { return id.replace(/^recipe-/, "").replace(/-/g, " ").replace(/\b\w/g, function (c) { return c.toUpperCase(); }); }
   function renderSavedList(saved) {
@@ -253,10 +254,23 @@
       }).join("");
     }
     var journal = loadJSON("tydCookLog", {});
-    var jids = Object.keys(journal).filter(function (id) { return journal[id] && journal[id].count > 0; });
+    var jids = Object.keys(journal).filter(function (id) { return journal[id] && (journal[id].count > 0 || (journal[id].notes || "").trim()); });
     if (jids.length) {
+      jids.sort(function (x, y) { return (journal[y].ts || 0) - (journal[x].ts || 0); });
       var total = jids.reduce(function (sum, id) { return sum + (journal[id].count || 0); }, 0);
-      $("dashjournal").innerHTML = '<div class="dashitem">📓 ' + total + ' cook' + (total === 1 ? '' : 's') + ' logged across ' + jids.length + ' recipe' + (jids.length === 1 ? '' : 's') + ' · <a href="recipes.html">Open Recipes</a></div>';
+      var jhtml = '<div class="dashitem">📓 ' + total + ' cook' + (total === 1 ? '' : 's') + ' logged across ' + jids.length + ' recipe' + (jids.length === 1 ? '' : 's') + '</div>';
+      jhtml += jids.slice(0, 10).map(function (id) {
+        var e = journal[id];
+        var nm = RECIPE_NAMES[id] || NAMES[id] || prettyId(id);
+        var meta = [];
+        if (e.count > 0) meta.push('cooked ' + e.count + '×');
+        if (e.last) meta.push('last ' + e.last);
+        var h = '<div class="dashitem"><a href="recipes.html#' + id + '">' + esc(nm) + '</a>';
+        if (meta.length) h += ' · ' + esc(meta.join(' · '));
+        if ((e.notes || "").trim()) h += '<br><span style="color:#3f6b7a;">“' + esc(e.notes.trim().slice(0, 160)) + (e.notes.trim().length > 160 ? '…' : '') + '”</span>';
+        return h + '</div>';
+      }).join("");
+      $("dashjournal").innerHTML = jhtml;
     }
     var prefs = alertPrefs();
     document.querySelectorAll("#alertprefs input").forEach(function (cb) { cb.checked = prefs.indexOf(cb.value) > -1; });
