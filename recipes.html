@@ -5249,6 +5249,214 @@ hot sauce</p>
     <p class="disc">Part of TreatYourselfDiscounts, the Pond. Welcome to the Pond!<br><a href="account.html" style="color:#1f5f74; font-weight:700;">Your Pond Account: sign up or log in</a></p>
   </footer>
 </div>
+<style>
+.mkcard{background:#fffdf5;border:2px solid #ffd94d;border-radius:16px;padding:16px;margin:14px 0}
+.mkcard h2{margin:2px 0 6px;font-size:21px}
+.mkcard .mkintro{margin:0 0 12px;color:#5b7a87;font-size:14px}
+.mkcard label{display:block;font-weight:700;font-size:13.5px;margin:10px 0 4px;color:#33545e}
+.mkcard input[type=text],.mkcard input[type=number],.mkcard textarea{width:100%;box-sizing:border-box;border:1.5px solid #cfe3ea;border-radius:10px;padding:9px 10px;font:inherit;font-size:15px;background:#fff}
+.mkcard textarea{resize:vertical}
+.mkrow{display:flex;gap:10px}.mkrow>div{flex:1}
+.mkbtn{background:#ffd94d;border:2px solid #e3c93f;color:#6b5900;font-weight:800;border-radius:999px;padding:10px 18px;font-size:15px;cursor:pointer}
+.mkbtn.ghost{background:#fff;color:#33545e;border-color:#cfe3ea}
+.mkstatus{font-size:14px;color:#2e7d32;font-weight:700;min-height:18px}
+.mkitem{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1.5px solid #eef3f5;border-radius:10px;margin:6px 0;background:#fff}
+.mkitem .nm{flex:1;font-weight:700}
+.mkitem button{border:1.5px solid #cfe3ea;background:#f7fbfc;border-radius:999px;padding:5px 12px;font-weight:700;cursor:pointer}
+.mkitem button.del{border-color:#f0c0c0;background:#fdf3f3;color:#a33}
+#mkphoto_prev{max-width:140px;border-radius:10px;display:none;margin-top:8px}
+</style>
+<script>
+(function () {
+  "use strict";
+  var KEY = "tydMyRecipes", DELKEY = "tydMyRecipesDeleted";
+  function load() { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch (e) { return []; } }
+  function loadDel() { try { return JSON.parse(localStorage.getItem(DELKEY)) || []; } catch (e) { return []; } }
+  function persist(list, del) {
+    try { localStorage.setItem(KEY, JSON.stringify(list)); localStorage.setItem(DELKEY, JSON.stringify(del)); return true; }
+    catch (e) { return false; }
+  }
+  function esc(t) { return String(t == null ? "" : t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+  var injectedIds = {};
+  function cardHTML(r) {
+    var cats = (r.cats && r.cats.length) ? r.cats : ["My Recipes"];
+    var search = (r.name + " " + cats.join(" ") + " " + (r.ing || []).join(" ")).toLowerCase();
+    var meta = [];
+    if (r.servings) meta.push("Serves: " + r.servings);
+    if (r.prep) meta.push("Prep: " + r.prep + " min");
+    if (r.cook) meta.push("Cook: " + r.cook + " min");
+    var h = '<div class="card recipe-card" id="' + r.id + '" data-cats="' + esc(cats.join("|")) + '" data-search="' + esc(search) + '">';
+    h += cats.map(function (c) { return '<span class="tag">' + esc(c) + '</span>'; }).join(" ") + " ";
+    h += "<h2>" + esc(r.name) + "</h2>";
+    if (r.image) h += '<img class="photo" src="' + r.image + '" alt="' + esc(r.name) + '" loading="lazy" onerror="this.remove()">';
+    if (meta.length) h += '<p class="meta">' + esc(meta.join(" · ")) + "</p>";
+    if (r.desc) h += "<p>" + esc(r.desc) + "</p>";
+    h += "<h3>Ingredients</h3><ul>" + (r.ing || []).map(function (i) { return "<li>" + esc(i) + "</li>"; }).join("") + "</ul>";
+    h += "<h3>Directions</h3><ol>" + (r.dir || []).map(function (d) { return "<li>" + esc(d) + "</li>"; }).join("") + "</ol>";
+    if (r.notes) h += "<h3>Notes</h3><p>" + esc(r.notes).replace(/\n/g, "<br>") + "</p>";
+    if (r.nut && r.nut.length) h += '<h3>Nutrition (per serving)</h3><p class="note">' + esc(r.nut.join(" · ")) + "</p>";
+    var src = (r.source || "").trim();
+    if (/^https?:\/\//i.test(src)) {
+      var host = src.replace(/^https?:\/\//i, "").split("/")[0];
+      h += '<p class="note">Recipe from: <a href="' + esc(src) + '" target="_blank" rel="noopener">' + esc(host) + '</a>, saved in Lucy\'s cookbook.</p>';
+    } else if (src) {
+      h += '<p class="note">Recipe from: ' + esc(src) + ".</p>";
+    } else {
+      h += '<p class="note">Lucy\'s own recipe, from her kitchen notebook.</p>';
+    }
+    h += '<div class="actions"><button class="actbtn" data-share="' + r.id + '">📤 Share recipe</button> <button class="actbtn" data-save="' + r.id + '">🔖 Save recipe</button> <button class="actbtn" data-print="' + r.id + '">🖨️ Print recipe</button></div>';
+    h += "</div>";
+    return h;
+  }
+  // 1) Inject her recipes as real cards BEFORE the other recipe scripts run.
+  var list = load();
+  var builtIns = document.querySelectorAll(".recipe-card");
+  var after = builtIns.length ? builtIns[builtIns.length - 1] : null;
+  list.forEach(function (r) {
+    if (!r || !r.id || !r.name) return;
+    var tmp = document.createElement("div");
+    tmp.innerHTML = cardHTML(r);
+    var card = tmp.firstChild;
+    if (after && after.parentNode) { after.parentNode.insertBefore(card, after.nextSibling); after = card; }
+    else document.body.appendChild(card);
+    injectedIds[r.id] = 1;
+  });
+  window.__mrInjectedIds = injectedIds;
+  // 2) Sync surface for the Pond Account module.
+  window.TYDMyRecipes = {
+    get: load,
+    getDeleted: loadDel,
+    set: function (nl, nd) {
+      persist(nl || [], nd || []);
+      var now = {};
+      (nl || []).forEach(function (r) { if (r && r.id) now[r.id] = 1; });
+      var diff = false;
+      Object.keys(now).forEach(function (id) { if (!injectedIds[id]) diff = true; });
+      Object.keys(injectedIds).forEach(function (id) { if (!now[id]) diff = true; });
+      if (diff) { try { location.reload(); } catch (e) {} }
+    }
+  };
+  function changed() { if (window.TYDMyRecipesChanged) window.TYDMyRecipesChanged(); }
+  // 3) The creator section, placed right under the toolbar.
+  var sec = document.createElement("section");
+  sec.className = "mkcard"; sec.id = "makeyourown";
+  sec.innerHTML =
+    "<h2>✏️ Create your own recipe</h2>" +
+    '<p class="mkintro">Write your own recipe in the same format as the cookbook and it joins the collection below: its own category shelf, search, grocery list, meal planning, cooking journal and Start cooking, just like the others. Your recipes save on this device and to your Pond Account when you are signed in.</p>' +
+    '<label for="mk_name">Recipe name *</label><input type="text" id="mk_name" placeholder="Like: Sunday Chicken Soup">' +
+    '<label for="mk_desc">Description</label><textarea id="mk_desc" rows="2" placeholder="A sentence or two about it"></textarea>' +
+    '<label for="mk_photo">Photo (optional)</label><input type="file" id="mk_photo" accept="image/*"><img id="mkphoto_prev" alt="Your recipe photo preview"><div><button type="button" class="mkbtn ghost" id="mk_photo_rm" style="display:none;margin-top:6px">Remove photo</button></div>' +
+    '<div class="mkrow"><div><label for="mk_serv">Servings</label><input type="text" id="mk_serv" placeholder="4 servings"></div>' +
+    '<div><label for="mk_prep">Prep (minutes)</label><input type="number" id="mk_prep" min="0" step="1" placeholder="15"></div>' +
+    '<div><label for="mk_cook">Cook (minutes)</label><input type="number" id="mk_cook" min="0" step="1" placeholder="30"></div></div>' +
+    '<label for="mk_cats">Categories (comma separated, first one is the main shelf)</label><input type="text" id="mk_cats" placeholder="My Recipes, Dinner">' +
+    '<label for="mk_ing">Ingredients, one per line (end a line with : to make a section heading)</label><textarea id="mk_ing" rows="6" placeholder="2 cups flour&#10;1 tsp salt"></textarea>' +
+    '<label for="mk_dir">Directions, one step per line</label><textarea id="mk_dir" rows="6" placeholder="Mix everything together.&#10;Bake at 350°F for 30 minutes."></textarea>' +
+    '<label for="mk_notes">Notes</label><textarea id="mk_notes" rows="2"></textarea>' +
+    '<label for="mk_nut">Nutrition, one item per line</label><textarea id="mk_nut" rows="2" placeholder="Calories: 200&#10;Protein: 12"></textarea>' +
+    '<label for="mk_src">Source (a website link, or words like: Grandma\'s cookbook)</label><input type="text" id="mk_src">' +
+    '<div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap"><button type="button" class="mkbtn" id="mk_save">Save recipe</button><button type="button" class="mkbtn ghost" id="mk_cancel" style="display:none">Cancel edit</button></div>' +
+    '<p class="mkstatus" id="mk_status"></p>' +
+    '<div id="mk_mine"></div>';
+  var toolbar = document.querySelector(".toolbar");
+  if (toolbar && toolbar.parentNode) toolbar.parentNode.insertBefore(sec, toolbar.nextSibling);
+  else document.body.insertBefore(sec, document.body.firstChild);
+  var $ = function (id) { return document.getElementById(id); };
+  var editingId = null, pendingPhoto = "";
+  function lines(t) { return String(t || "").split(/\n+/).map(function (x) { return x.trim(); }).filter(Boolean); }
+  function renderMine() {
+    var mine = load();
+    var box = $("mk_mine");
+    if (!mine.length) { box.innerHTML = ""; return; }
+    box.innerHTML = "<h3 style='margin:14px 0 4px'>Your recipes (" + mine.length + ")</h3>" + mine.map(function (r) {
+      return '<div class="mkitem"><span class="nm">' + esc(r.name) + '</span><button type="button" data-edit="' + r.id + '">Edit</button><button type="button" class="del" data-del="' + r.id + '">Delete</button></div>';
+    }).join("");
+    box.querySelectorAll("[data-edit]").forEach(function (b) { b.addEventListener("click", function () { startEdit(b.getAttribute("data-edit")); }); });
+    box.querySelectorAll("[data-del]").forEach(function (b) { b.addEventListener("click", function () { delRecipe(b.getAttribute("data-del")); }); });
+  }
+  function fillForm(r) {
+    $("mk_name").value = r.name || ""; $("mk_desc").value = r.desc || "";
+    $("mk_serv").value = r.servings || ""; $("mk_prep").value = r.prep || ""; $("mk_cook").value = r.cook || "";
+    $("mk_cats").value = (r.cats || []).join(", ");
+    $("mk_ing").value = (r.ing || []).join("\n"); $("mk_dir").value = (r.dir || []).join("\n");
+    $("mk_notes").value = r.notes || ""; $("mk_nut").value = (r.nut || []).join("\n"); $("mk_src").value = r.source || "";
+    pendingPhoto = r.image || "";
+    var pv = $("mkphoto_prev");
+    if (pendingPhoto) { pv.src = pendingPhoto; pv.style.display = "block"; $("mk_photo_rm").style.display = "inline-block"; }
+    else { pv.style.display = "none"; $("mk_photo_rm").style.display = "none"; }
+  }
+  function clearForm() { fillForm({}); editingId = null; $("mk_save").textContent = "Save recipe"; $("mk_cancel").style.display = "none"; $("mk_photo").value = ""; }
+  function startEdit(id) {
+    var r = load().filter(function (x) { return x.id === id; })[0];
+    if (!r) return;
+    editingId = id; fillForm(r);
+    $("mk_save").textContent = "Save changes"; $("mk_cancel").style.display = "inline-block";
+    sec.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  function delRecipe(id) {
+    var cur = load(); var r = cur.filter(function (x) { return x.id === id; })[0];
+    if (!r) return;
+    if (!confirm("Delete your recipe \"" + r.name + "\"? This cannot be undone.")) return;
+    var nl = cur.filter(function (x) { return x.id !== id; });
+    var nd = loadDel().filter(function (d) { return d.id !== id; }); nd.push({ id: id, t: Date.now() });
+    if (!persist(nl, nd)) { $("mk_status").textContent = "Could not save on this device."; return; }
+    changed();
+    setTimeout(function () { try { location.reload(); } catch (e) {} }, 400);
+  }
+  $("mk_photo").addEventListener("change", function () {
+    var f = this.files && this.files[0];
+    if (!f) return;
+    var rd = new FileReader();
+    rd.onload = function () {
+      var img = new Image();
+      img.onload = function () {
+        var sc = Math.min(1, 800 / Math.max(img.width, img.height));
+        var cv = document.createElement("canvas");
+        cv.width = Math.round(img.width * sc); cv.height = Math.round(img.height * sc);
+        cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
+        pendingPhoto = cv.toDataURL("image/jpeg", 0.82);
+        var pv = $("mkphoto_prev"); pv.src = pendingPhoto; pv.style.display = "block"; $("mk_photo_rm").style.display = "inline-block";
+      };
+      img.src = rd.result;
+    };
+    rd.readAsDataURL(f);
+  });
+  $("mk_photo_rm").addEventListener("click", function () { pendingPhoto = ""; $("mkphoto_prev").style.display = "none"; this.style.display = "none"; $("mk_photo").value = ""; });
+  $("mk_cancel").addEventListener("click", clearForm);
+  $("mk_save").addEventListener("click", function () {
+    var name = $("mk_name").value.trim();
+    if (!name) { $("mk_status").textContent = "Give your recipe a name first."; $("mk_name").focus(); return; }
+    var cats = $("mk_cats").value.split(",").map(function (x) { return x.trim(); }).filter(Boolean);
+    if (!cats.length) cats = ["My Recipes"];
+    var r = {
+      id: editingId || ("recipe-mine-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)),
+      name: name, desc: $("mk_desc").value.trim(),
+      servings: $("mk_serv").value.trim(),
+      prep: $("mk_prep").value ? String(parseInt($("mk_prep").value, 10) || "") : "",
+      cook: $("mk_cook").value ? String(parseInt($("mk_cook").value, 10) || "") : "",
+      cats: cats, ing: lines($("mk_ing").value), dir: lines($("mk_dir").value),
+      notes: $("mk_notes").value.trim(), nut: lines($("mk_nut").value),
+      source: $("mk_src").value.trim(), image: pendingPhoto || "", u: Date.now()
+    };
+    var cur = load(); var done = false;
+    var nl = cur.map(function (x) { if (x.id === r.id) { done = true; return r; } return x; });
+    if (!done) nl.push(r);
+    if (!persist(nl, loadDel())) { $("mk_status").textContent = "This device is out of room for recipe photos. Try a smaller photo, or remove one from another recipe."; return; }
+    changed();
+    $("mk_status").textContent = "Saved! Taking you to your recipe...";
+    try { location.hash = r.id; } catch (e) {}
+    setTimeout(function () { try { location.reload(); } catch (e) {} }, 700);
+  });
+  renderMine();
+  // 4) Teach the saved-recipes NAMES map about her recipes once everything has loaded.
+  window.addEventListener("load", function () {
+    try {
+      if (window.NAMES) load().forEach(function (r) { window.NAMES[r.id] = r.name; });
+      if (window.TYDSetSaved && window.TYDGetSaved) window.TYDSetSaved(window.TYDGetSaved());
+    } catch (e) {}
+  });
+})();
+</script>
 <script>
   var NAMES = {"recipe-1-ingredient-low-carb-alfredo-pasta": "1 Ingredient Low Carb Alfredo Pasta", "recipe-1234-cakes": "1234 Cakes", "recipe-5-min-egg-drop-soup-recipe-better-than-takeout": "5-Min Egg Drop Soup Recipe: Better Than Takeout", "recipe-shredhappens-middle-eastern-chuck-roast": "@SHREDHAPPENS MIDDLE EASTERN CHUCK ROAST", "recipe-air-fried-pepperoni-pizza-balls": "Air Fried Pepperoni Pizza Balls😮 💨", "recipe-air-fryer-garlic-bread-toastie": "Air fryer garlic bread toastie", "recipe-air-fryer-korean-corn-dogs": "Air Fryer Korean Corn Dogs", "recipe-air-fryer-pork-chicharron-cracklings": "Air fryer pork chicharron/cracklings", "recipe-andes-peppermint-crunch-chunkies": "Andes Peppermint Crunch Chunkies", "recipe-apple-crisp": "Apple Crisp", "recipe-arsenio-s-hot-honey-cornflake-chicken": "Arsenio’s Hot Honey Cornflake Chicken", "recipe-bacon-cheddar-crackers": "Bacon Cheddar Crackers", "recipe-balkan-feta-cream-cheese-pie-burek-sa-sirom": "Balkan Feta-Cream Cheese Pie (Burek sa Sirom)", "recipe-banana-bread": "Banana Bread", "recipe-banana-bread-pudding-cake": "Banana Bread Pudding Cake", "recipe-banana-cake": "banana cake", "recipe-banana-cake-with-salted-caramel-cream-cheese-fro": "Banana Cake with Salted Caramel Cream Cheese Frosting", "recipe-bbq-cheeseburger-sliders": "BBQ Cheeseburger Sliders", "recipe-berries-cream-cottage-cheese-pancakes": "Berries & Cream Cottage Cheese Pancakes 🥞🍓", "recipe-berry-acai-bowl": "Berry Acai Bowl", "recipe-best-blueberry-dump-cake": "Best Blueberry Dump Cake", "recipe-best-chicken-piccata-with-lemon-sauce": "Best Chicken Piccata With Lemon Sauce", "recipe-best-ever-beef-stew": "Best Ever Beef Stew", "recipe-biko-recipe-easy-filipino-sticky-rice-cake": "Biko Recipe (Easy Filipino Sticky Rice Cake)", "recipe-birria-grilled-cheese": "Birria grilled cheese", "recipe-bone-marrow-immune-lollipops": "Bone Marrow Immune Lollipops", "recipe-brown-butter-cream-cheese-snickerdoodle-cobbler": "BROWN BUTTER CREAM CHEESE SNICKERDOODLE COBBLER", "recipe-buffalo-chicken-dip-crispy-rice-cups": "Buffalo Chicken Dip Crispy Rice Cups", "recipe-buffalo-chicken-sliders": "Buffalo chicken sliders", "recipe-buffalo-chicken-sticks": "Buffalo Chicken Sticks", "recipe-buffalo-one-pan-chicken-alfredo": "Buffalo One-Pan Chicken Alfredo", "recipe-burrito-style-beef-enchiladas": "Burrito Style Beef Enchiladas", "recipe-candied-sweet-potatoes-goguma-mattang": "Candied Sweet Potatoes | Goguma Mattang (고구마 맛탕)", "recipe-caramelized-onion-pasta-with-chili-oil": "Caramelized Onion Pasta with Chili Oil", "recipe-carbonara-fried-rice": "Carbonara fried rice✨", "recipe-cheese-stuffed-garlic-naan": "Cheese Stuffed Garlic Naan", "recipe-cheeseburger-hot-pockets": "Cheeseburger Hot Pockets 🍔🔥", "recipe-cheeseburger-pizza-braid": "Cheeseburger Pizza Braid", "recipe-cheesy-beef-rice": "Cheesy Beef & Rice", "recipe-cheesy-beef-zucchini-casserole": "Cheesy Beef & Zucchini Casserole", "recipe-cheesy-chicken-taco-mac": "Cheesy Chicken Taco Mac", "recipe-cheesy-chicken-taco-rice": "Cheesy Chicken Taco Rice", "recipe-cheesy-enchilada-rice-skillet": "Cheesy Enchilada Rice Skillet", "recipe-cheesy-garlic-bread": "Cheesy Garlic Bread", "recipe-cheesy-ground-beef-and-rice-casserole": "Cheesy Ground Beef and Rice Casserole", "recipe-cheesy-mexican-honey-beef-pasta": "Cheesy Mexican Honey Beef Pasta", "recipe-cheesy-sausage-wonton-cups": "Cheesy Sausage Wonton Cups", "recipe-cheesy-taco-potato-skillet": "Cheesy Taco Potato Skillet", "recipe-cheesy-taco-sticks": "Cheesy Taco Sticks", "recipe-chewy-oatmeal-lace-cookies": "Chewy Oatmeal Lace Cookies", "recipe-chick-fil-a-nuggets-dupe": "Chick-fil-A Nuggets Dupe", "recipe-chicken-dumplings": "Chicken & Dumplings", "recipe-chicken-yogurt": "Chicken & Yogurt🤤", "recipe-chicken-alfredo-bake": "Chicken Alfredo Bake", "recipe-chicken-alfredo-lasagna-rolls": "Chicken Alfredo Lasagna Rolls", "recipe-chicken-fajita-rice": "Chicken fajita rice", "recipe-chicken-pot-pie-soup": "Chicken Pot Pie Soup", "recipe-chicken-teriyaki-crispy-rice": "CHICKEN TERIYAKI CRISPY RICE", "recipe-chicken-teriyaki-crispy-rice-cups": "Chicken Teriyaki Crispy Rice Cups", "recipe-chicken-pecan-quiche": "Chicken-Pecan Quiche", "recipe-chili-mac-and-cheese-recipe-30-minute-dinner": "Chili Mac and Cheese Recipe (30 Minute Dinner)", "recipe-chinese-steamed-egg-microwave-hack-less-than-5mi": "Chinese Steamed Egg 水蒸蛋 - microwave hack less than 5min", "recipe-chinese-steamed-egg-microwave-hack-less-than-5mi-2": "Chinese Steamed Egg 蒸水蛋 - microwave hack less than 5min.", "recipe-chocolate-rice-and-chocolate-rice-pudding": "Chocolate rice and chocolate rice pudding", "recipe-chocolate-spritz-cookies": "Chocolate Spritz Cookies", "recipe-chocolate-strawberry-bites": "Chocolate Strawberry Bites", "recipe-cinnamon-bun-cookies": "cinnamon bun cookies", "recipe-cinnamon-swirl-chocolate-chunk-pumpkin-bread": "Cinnamon Swirl Chocolate Chunk Pumpkin Bread", "recipe-classic-jello-salad": "Classic Jello Salad", "recipe-coconut-oatmeal-cookies": "Coconut Oatmeal Cookies", "recipe-coconut-tiramisu-no-eggs-or-alcohol": "Coconut Tiramisu (No Eggs or Alcohol)", "recipe-coconut-water-sugar-almonds-cashews": "Coconut water + Sugar + Almonds / Cashews", "recipe-copycat-auntie-anne-s-pretzel-bites-w-cheese-dip": "Copycat Auntie Anne's Pretzel Bites w/ Cheese Dip & Cream Cheese Frosting", "recipe-copycat-crunchwrap-supreme": "Copycat Crunchwrap Supreme", "recipe-corn-and-squash-soup": "Corn and Squash Soup", "recipe-cottage-cheese-chips": "Cottage Cheese Chips", "recipe-cottage-cheese-dessert": "Cottage Cheese Dessert", "recipe-cowboy-casserole": "Cowboy Casserole", "recipe-cracked-out-pea-salad": "Cracked Out Pea Salad", "recipe-cranberry-spinach-stuffed-chicken-with-brie": "Cranberry & Spinach Stuffed Chicken with Brie", "recipe-cream-corn-like-no-other": "Cream Corn Like No Other", "recipe-creamed-corn": "Creamed Corn", "recipe-creamy-baked-penne": "Creamy Baked Penne", "recipe-creamy-beef-gnocchi-soup": "Creamy Beef & Gnocchi Soup", "recipe-creamy-beef-and-shells": "Creamy Beef and Shells", "recipe-creamy-chicken-broccoli-casserole": "CREAMY CHICKEN & BROCCOLI CASSEROLE", "recipe-creamy-chicken-breast-in-spinach-parmesan-sauce": "Creamy Chicken Breast in Spinach Parmesan Sauce", "recipe-creamy-garlic-pasta": "Creamy Garlic Pasta", "recipe-creamy-harissa-chicken-pasta": "Creamy Harissa Chicken Pasta", "recipe-creamy-hot-turkey-sandwich-with-leftovers": "Creamy Hot Turkey Sandwich with Leftovers", "recipe-creamy-pesto-chicken-broccoli-pasta-bake": "Creamy Pesto Chicken & Broccoli Pasta Bake", "recipe-creamy-pesto-chicken-spaghetti-squash-boats": "Creamy Pesto Chicken Spaghetti Squash Boats", "recipe-crispy-baked-mac-cheese": "Crispy Baked Mac & Cheese", "recipe-crispy-bang-bang-chicken-an-incredible-sweet-and": "Crispy Bang Bang Chicken: An Incredible Sweet and Spicy Sensation", "recipe-crispy-beef-cones": "Crispy Beef Cones", "recipe-crispy-beef-tacos-with-pico-de-gallo-and-cream-t": "Crispy beef tacos with pico de gallo and cream taco sauce. 🌮", "recipe-crispy-chicken-caesar-salad-croissants": "Crispy Chicken Caesar Salad Croissants", "recipe-crispy-corn-cheese-balls": "Crispy Corn Cheese Balls", "recipe-crispy-honey-butter-chicken": "Crispy Honey Butter Chicken", "recipe-crispy-honey-chilli-lime-chicken-tender": "Crispy honey chilli lime chicken tender", "recipe-crispy-ranch-parmesan-smashed-carrots": "Crispy Ranch Parmesan Smashed Carrots", "recipe-crockpot-marry-me-chicken-sandwiches": "Crockpot Marry Me Chicken Sandwiches", "recipe-croffles-croissant-waffles": "Croffles (Croissant Waffles)", "recipe-crunchy-japanese-long-fries-with-garlic-mayo-par": "Crunchy Japanese Long Fries with garlic mayo parmesan sauce 🥔", "recipe-crunchy-pasta-salat": "Crunchy Pasta Salat", "recipe-crustless-broccoli-quiche-with-cheddar-and-scall": "Crustless Broccoli Quiche with Cheddar and Scallions", "recipe-easy-buttermilk-pie": "Easy Buttermilk Pie", "recipe-easy-cheeseburger-puffs": "Easy Cheeseburger Puffs", "recipe-easy-cheesy-taco-soup": "Easy Cheesy Taco Soup", "recipe-easy-homemade-pretzels": "Easy homemade pretzels", "recipe-easy-layered-taco-bake": "Easy Layered Taco Bake", "recipe-easy-pineapple-upside-down-cake": "Easy Pineapple Upside-Down Cake", "recipe-easy-healthier-creamy-garlic-beef-pasta": "Easy, Healthier Creamy Garlic Beef Pasta", "recipe-egg-drop-soup": "Egg drop soup", "recipe-ezekiel-bread": "Ezekiel Bread", "recipe-fat-burning-soup": "Fat Burning Soup", "recipe-flourless-fake-teque-os": "FLOURLESS “FAKE” TEQUEÑOS 🤤🧀", "recipe-fluffy-lime-jello-salad": "Fluffy Lime Jello Salad", "recipe-freezer-friendly-chicken-marinades": "Freezer-Friendly Chicken Marinades", "recipe-french-dip-loaded-garlic-bread": "French Dip Loaded Garlic Bread", "recipe-garlic-cheese-rolls": "Garlic cheese rolls", "recipe-garlic-knot-double-smashburger-with-caramelized": "GARLIC KNOT DOUBLE SMASHBURGER WITH CARAMELIZED ONION & CHIPOTLE SAUCE", "recipe-garlic-parm-hot-honey-rice-paper-bites": "Garlic Parm Hot Honey rice paper bites", "recipe-garlic-parmesan-chicken-potato-skillet": "Garlic Parmesan Chicken & Potato Skillet", "recipe-garlic-parmesan-chicken-skewers": "GARLIC PARMESAN CHICKEN SKEWERS", "recipe-gold-drop-cake-the-one-that-cries": "GOLD DROP CAKE (THE ONE THAT CRIES)", "recipe-goldfish-rice-krispies": "Goldfish Rice Krispies", "recipe-grandma-s-green-bean-casserole": "Grandma's Green Bean Casserole", "recipe-grandma-s-lime-green-jello-salad-recipe-with-cot": "Grandma’s Lime Green Jello Salad Recipe (with Cottage Cheese & Pineapple)", "recipe-ground-beef-stroganoff-no-cream-soups": "Ground Beef Stroganoff (No Cream Soups)", "recipe-halal": "Halal", "recipe-high-protein-halal-cart-chicken-rice-bowls": "High Protein Halal Cart Chicken Rice Bowls!", "recipe-homemade-creamed-corn": "Homemade Creamed Corn", "recipe-homemade-lemon-curd": "Homemade lemon curd", "recipe-homemade-lemonade": "Homemade Lemonade", "recipe-homemade-panera-broccoli-cheese-soup": "Homemade Panera Broccoli Cheese Soup", "recipe-homemade-samoas-a-k-a-caramel-de-lites": "Homemade Samoas (a.k.a. Caramel de-Lites)", "recipe-honey-bbq-mac-n-cheese": "Honey Bbq Mac N Cheese", "recipe-honey-butter-toast": "Honey Butter Toast", "recipe-honey-garlic-butter-roasted-carrots": "Honey Garlic Butter Roasted Carrots", "recipe-honey-mustard-glazed-christmas-spiral-ham": "Honey Mustard Glazed Christmas Spiral Ham", "recipe-honey-parmesan-rigatoni": "Honey Parmesan Rigatoni", "recipe-honeybaked-ham": "Honeybaked Ham", "recipe-hot-cheetos-cream-cheese-cucumber": "Hot Cheetos / Cream Cheese / Cucumber", "recipe-hwachae": "Hwachae", "recipe-icebox-cookies-refrigerator-cookies": "Icebox Cookies (Refrigerator Cookies)", "recipe-impossible-coconut-custard-pie": "Impossible Coconut Custard Pie", "recipe-impossibly-easy-mini-breakfast-sausage-pies": "Impossibly Easy Mini Breakfast Sausage Pies", "recipe-in-n-out-smash-burger-tacos": "In n out smash burger tacos 🌮", "recipe-jalape-o-cheese-twists": "Jalapeño Cheese Twists", "recipe-jalape-o-popper-corn-salad": "Jalapeño Popper Corn Salad", "recipe-japanese-souffle-pancakes": "Japanese Souffle Pancakes", "recipe-korean-corn-dogs": "Korean Corn Dogs", "recipe-k-se-kartoffel-cheese-potato-sandwich-german": "Käse Kartoffel ( Cheese Potato ) Sandwich - German", "recipe-lasagna-mozzarella-sticks": "Lasagna Mozzarella Sticks", "recipe-lasagna-rolls": "Lasagna Rolls", "recipe-lemon-curd-cr-me-br-l-e-cookies-tangy-sweet-trea": "Lemon Curd Crème Brûlée Cookies – Tangy & Sweet Treat", "recipe-lemon-drop-cookies": "Lemon Drop Cookies", "recipe-lemon-pepper-wet-chicken-tenders": "Lemon Pepper Wet Chicken Tenders", "recipe-macaroni-and-hamburger-soup": "Macaroni and Hamburger Soup", "recipe-mac-n-cheese-lasagna": "Mac’n’cheese lasagna", "recipe-mango-chia-pudding-with-coconut": "Mango chia pudding with coconut", "recipe-marry-me-chicken-pasta": "Marry Me Chicken Pasta", "recipe-matcha-marshmallows-with-marshmallow-root": "Matcha Marshmallows with Marshmallow Root", "recipe-mbakbaka": "Mbakbaka (مبكبكه)", "recipe-meatloaf-muffins": "Meatloaf Muffins", "recipe-mexican-pizza-taco-bell-copycat": "Mexican Pizza {Taco Bell Copycat}", "recipe-mexican-shepherd-s-pie": "Mexican Shepherd’s Pie", "recipe-mexican-street-corn-dip": "Mexican Street Corn Dip", "recipe-microwave-garlic-butter-mac": "Microwave Garlic Butter Mac", "recipe-milk-tea": "Milk Tea", "recipe-mini-grilled-cheese-bites": "MINI GRILLED CHEESE BITES!", "recipe-mini-tuna-rice-cups": "Mini Tuna Rice Cups", "recipe-my-favorite-skillet-corn": "My Favorite Skillet Corn", "recipe-my-mexican-restaurant-queso-dip-at-home": "my mexican restaurant queso dip… at home", "recipe-navajo-tacos": "Navajo Tacos", "recipe-no-175-lizzie-s-bean-and-cheese-burritos": "No. 175 Lizzie’s Bean and Cheese Burritos", "recipe-one-pot-honey-mustard-chicken-and-rice": "One pot Honey Mustard Chicken and Rice", "recipe-one-pot-recipe-hearty-chicken-and-biscuit-casser": "One-Pot Recipe: Hearty Chicken and Biscuit Casserole", "recipe-one-pot-skillet-pasta-lazy-lasagna-lasagna-soup": "One-Pot Skillet Pasta (Lazy Lasagna / Lasagna Soup)", "recipe-one-pot-spinach-tomato-pasta": "One-Pot Spinach Tomato Pasta", "recipe-one-skillet-spicy-honey-bbq-sausage-pasta": "One-Skillet Spicy Honey BBQ Sausage & Pasta", "recipe-one-tray-caramelized-onion-garlic-pasta": "One-Tray Caramelized Onion & Garlic Pasta 🔥", "recipe-oreo-tres-leches-cake": "Oreo Tres Leches Cake", "recipe-peach-cobbler-dump-cake": "Peach Cobbler Dump Cake", "recipe-peanut-butter-and-jelly-cookie-recipe-5-ingredie": "Peanut Butter and Jelly Cookie Recipe! (5 Ingredients)", "recipe-peanut-butter-blossoms": "Peanut Butter Blossoms", "recipe-peanut-noodles": "Peanut Noodles", "recipe-pecan-shortbread-christmas-tree-cookies": "Pecan Shortbread Christmas Tree Cookies", "recipe-penne-alla-carbonara": "Penne alla Carbonara", "recipe-pesto-caprese-grilled-cheese": "Pesto Caprese Grilled Cheese", "recipe-pigs-in-a-blanket": "Pigs in a Blanket", "recipe-pineapple-cream-cheesecake": "Pineapple Cream Cheesecake", "recipe-pink-sauce-mac-cheese": "Pink Sauce Mac & Cheese", "recipe-pizza-burrito": "PIZZA BURRITO", "recipe-postre-de-queso-y-frutas-frescas-extra-delicioso": "Postre de queso y frutas frescas extra delicioso 😋", "recipe-post-partum-power-tea": "POST‑PARTUM POWER TEA", "recipe-powdered-cranberries-the-tiktok-viral-holiday-tr": "Powdered Cranberries: The TikTok Viral Holiday Treat You Need to Try", "recipe-pumpkin-cinnamon-pull-apart-bread": "pumpkin cinnamon pull-apart bread", "recipe-pumpkin-pie": "Pumpkin Pie", "recipe-pumpkin-soup": "Pumpkin Soup", "recipe-pupusas-with-curtido-and-salsa": "Pupusas with Curtido and Salsa", "recipe-ramen-omelette": "Ramen Omelette", "recipe-real-food-lemon-frozen-custard": "REAL FOOD LEMON FROZEN CUSTARD", "recipe-recheio-bombom-ferrero-rocher": "Recheio Bombom Ferrero Rocher", "recipe-recipeeee": "Recipeeee", "recipe-rib-biriyani": "Rib Biriyani", "recipe-rice-krispie-chocolate-chip-cookies": "Rice Krispie Chocolate Chip Cookies", "recipe-roasted-butternut-squash-and-bacon-soup": "Roasted Butternut Squash and Bacon Soup", "recipe-roasted-tomato-burrata-dip": "Roasted Tomato Burrata Dip", "recipe-roasted-vegetable-mac-n-cheese": "Roasted Vegetable Mac n' Cheese", "recipe-ruths-chris-sweet-potato-casserole": "Ruths Chris Sweet Potato Casserole", "recipe-sacol-de-manga-cremoso": "Sacolé de Manga Cremoso", "recipe-salty-vanilla-bean-honey-marshmallow-fluff": "SALTY VANILLA BEAN HONEY MARSHMALLOW FLUFF", "recipe-sausage-and-gravy-breakfast-casserole": "Sausage and Gravy Breakfast Casserole🎄", "recipe-shepherd-s-pie-cottage-pie": "Shepherd’s Pie (Cottage Pie)", "recipe-simple-pasta-salad": "Simple Pasta Salad", "recipe-simply-delicious-creamy-lima-beans": "Simply Delicious Creamy Lima Beans", "recipe-skillet-baked-ziti": "Skillet Baked Ziti", "recipe-skillet-chili-mac": "Skillet Chili Mac", "recipe-sloppy-grilled-cheese-sandwiches": "Sloppy Grilled Cheese Sandwiches", "recipe-sloppy-joe-casserole": "Sloppy Joe Casserole", "recipe-smashed-brussels-sprouts": "Smashed Brussels Sprouts", "recipe-snowflake-spritz-cookies": "Snowflake Spritz Cookies", "recipe-southwestern-eggrolls-copycat": "Southwestern Eggrolls Copycat", "recipe-spicy-sweet-chili-chicken": "Spicy sweet chili chicken", "recipe-spinach-and-cheese-christmas-tree-appetizer": "Spinach and Cheese Christmas Tree Appetizer", "recipe-split-pea-soup-with-ham": "Split Pea Soup with Ham", "recipe-split-pea-soup-with-spinach-and-barley": "Split-Pea Soup with Spinach and Barley", "recipe-spritz-cookies": "Spritz Cookies", "recipe-steamed-rice-paper-dumplings-gf-df": "STEAMED RICE PAPER DUMPLINGS (GF / DF) ✨", "recipe-sticky-ep-1-mango-sticky-rice": "STICKY ep. 1 🥭🍚 MANGO STICKY RICE", "recipe-straight-protein-chip-chip-hooray": "Straight protein? Chip, chip, hooray 🍗!", "recipe-strawberry-clusters": "Strawberry Clusters", "recipe-sun-dried-tomato-and-mozzarella-flatbreads": "Sun-dried tomato and mozzarella flatbreads", "recipe-super-easy-scallion-pancakes": "Super easy scallion pancakes(葱油饼/蔥油餅)", "recipe-sweet-and-spicy-oven-beef-jerky": "Sweet and Spicy Oven Beef Jerky", "recipe-sweet-chilli-chicken": "Sweet chilli chicken!", "recipe-taco-crunch-supreme-wrap-recipe": "Taco Crunch Supreme Wrap Recipe 🌮", "recipe-taco-spaghetti": "Taco Spaghetti", "recipe-tavuklu-gen-chicken-triangle-wrap-turkish": "Tavuklu üçgen ( Chicken triangle ) wrap - Turkish", "recipe-the-best-chicken-and-dumplings": "The Best Chicken and Dumplings", "recipe-the-best-chili": "The Best Chili", "recipe-the-best-egg-salad": "The Best Egg Salad", "recipe-the-best-hot-honey-b-e-c": "the best hot honey B.E.C", "recipe-the-best-white-chicken-chili": "The Best White Chicken Chili", "recipe-the-cheesesteak-sub-sandwich-macro-friendly-high": "The Cheesesteak Sub Sandwich macro friendly high protein bowl💪", "recipe-the-tastiest-low-calorie-rice-paper-chips-that-a": "The Tastiest Low Calorie Rice Paper Chips that are perfect for Weightloss!!!", "recipe-three-cheese-jalapeno-popovers": "Three Cheese Jalapeno Popovers", "recipe-tostones-en-freidora-de-aire-tostones-in-air-fry": "Tostones en Freidora de Aire // Tostones in Air Fryer", "recipe-vintage-lime-jello-salad": "Vintage Lime Jello Salad", "recipe-viral-blanket-dumplings": "Viral Blanket Dumplings", "recipe-viral-dubai-pistachio-chocolate-bar": "Viral Dubai Pistachio Chocolate Bar", "recipe-viral-dumpling-lasagna": "Viral Dumpling Lasagna", "recipe-whipped-bone-marrow": "Whipped Bone Marrow", "recipe-yemeni-lahsa-turkish": "Yemeni lahsa - Turkish", "recipe-zero-carb-carnivore-bread": "Zero Carb Carnivore Bread", "recipe-zucchini-fritters-with-chili-lime-mayo": "Zucchini fritters with chili lime mayo", "recipe-zucchini-or-summer-squash-fritters": "zucchini or summer squash fritters", "recipe-zucchini-tomato-casserole-with-crumb-topping": "Zucchini Tomato Casserole with Crumb Topping", "recipe-tortilla-bake": "♥ Tortilla Bake"};
   var KEY = "tydSavedRecipes";
@@ -6933,6 +7141,61 @@ hot sauce</p>
   });
 })();
 
+</script>
+<script>
+(function () {
+  "use strict";
+  // Lucy's own created recipes sync to the Pond Account as users/{uid}.myRecipes
+  // (plus myRecipesDeleted tombstones), merged by id, newest edit wins.
+  var uid = null, fsx = null, pushT = null, merged = false;
+  function schedulePush() {
+    if (!uid || !fsx) return;
+    clearTimeout(pushT);
+    pushT = setTimeout(function () {
+      if (!uid || !fsx || !window.TYDMyRecipes) return;
+      fsx.setDoc(fsx.doc(fsx.db, "users", uid), { myRecipes: window.TYDMyRecipes.get(), myRecipesDeleted: window.TYDMyRecipes.getDeleted() }, { merge: true }).catch(function () {});
+    }, 900);
+  }
+  window.TYDMyRecipesChanged = schedulePush;
+  var cfg = { apiKey: "AIzaSyDoy5WjnhDlBqZaqZDUFkX6XodiXvQmr7I", authDomain: "treatyourselfdiscounts-881a9.firebaseapp.com", projectId: "treatyourselfdiscounts-881a9", storageBucket: "treatyourselfdiscounts-881a9.firebasestorage.app", messagingSenderId: "635205549581", appId: "1:635205549581:web:698e046036b14f33f81f44" };
+  Promise.all([
+    import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js"),
+    import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js"),
+    import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js")
+  ]).then(function (mods) {
+    var app;
+    try { app = mods[0].getApp(); } catch (e) { app = mods[0].initializeApp(cfg); }
+    var auth = mods[1].getAuth(app);
+    var db = mods[2].getFirestore(app);
+    fsx = { setDoc: mods[2].setDoc, doc: mods[2].doc, db: db };
+    mods[1].onAuthStateChanged(auth, function (user) {
+      if (!user || merged) { if (!user) uid = null; return; }
+      uid = user.uid; merged = true;
+      mods[2].getDoc(mods[2].doc(db, "users", user.uid)).then(function (snap) {
+        if (!window.TYDMyRecipes) return;
+        var data = snap.exists() ? snap.data() : {};
+        var remote = Array.isArray(data.myRecipes) ? data.myRecipes : [];
+        var remoteDel = Array.isArray(data.myRecipesDeleted) ? data.myRecipesDeleted : [];
+        var delMap = {};
+        (window.TYDMyRecipes.getDeleted() || []).concat(remoteDel).forEach(function (d) {
+          if (d && d.id) delMap[d.id] = Math.max(delMap[d.id] || 0, d.t || 0);
+        });
+        var byId = {};
+        (window.TYDMyRecipes.get() || []).concat(remote).forEach(function (r) {
+          if (!r || !r.id) return;
+          if (!byId[r.id] || (r.u || 0) >= (byId[r.id].u || 0)) byId[r.id] = r;
+        });
+        var out = Object.keys(byId).map(function (id) { return byId[id]; }).filter(function (r) {
+          return !(delMap[r.id] && delMap[r.id] >= (r.u || 0));
+        });
+        out.sort(function (a, b) { return (a.u || 0) - (b.u || 0); });
+        var delOut = Object.keys(delMap).map(function (id) { return { id: id, t: delMap[id] }; });
+        window.TYDMyRecipes.set(out, delOut);
+        schedulePush();
+      }).catch(function () {});
+    });
+  }).catch(function () {});
+})();
 </script>
 </body>
 </html>
