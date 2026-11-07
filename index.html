@@ -327,6 +327,7 @@
   const brandAnchor = document.getElementById('postpartum');
   const linktreeOrder = brandCards.slice();
   function brandName(card) { return card.querySelector('.name').textContent.trim().toLowerCase(); }
+  function matchesTerm(text, term) { const t = text.toLowerCase(); return term.split(/\s+/).every((wd) => t.includes(wd)); }
   function applyFilters() {
     const term = searchInput.value.trim().toLowerCase();
     const cat = categorySelect.value;
@@ -336,7 +337,7 @@
     let anyVisible = false;
     sorted.forEach((card) => {
       brandAnchor.parentNode.insertBefore(card, brandAnchor);
-      const show = (!term || card.textContent.toLowerCase().includes(term)) && (!cat || card.dataset.category === cat);
+      const show = (!term || matchesTerm(card.textContent, term)) && (!cat || card.dataset.category === cat);
       card.style.display = show ? '' : 'none';
       if (show) anyVisible = true;
     });
@@ -344,7 +345,7 @@
       const sectionText = section.querySelector('summary').textContent.toLowerCase();
       let sectionVisible = false;
       section.querySelectorAll('.card, .deal').forEach((item) => {
-        const show = !term || item.textContent.toLowerCase().includes(term) || sectionText.includes(term);
+        const show = !term || matchesTerm(item.textContent, term) || matchesTerm(sectionText, term);
         item.style.display = show ? '' : 'none';
         if (show) sectionVisible = true;
       });
@@ -352,11 +353,25 @@
       if (term && sectionVisible) section.open = true;
       if (sectionVisible) anyVisible = true;
     });
+    const tdGrid = document.getElementById('tdgrid');
+    let tdVisible = false;
+    if (tdGrid) {
+      tdGrid.querySelectorAll('.tdcard').forEach((el) => {
+        const show = !term || matchesTerm(el.textContent, term);
+        el.style.display = show ? '' : 'none';
+        if (show) tdVisible = true;
+      });
+      const tdSection = document.getElementById('topdeals');
+      if (tdSection) tdSection.style.display = (!term || tdVisible) ? '' : 'none';
+      if (tdVisible) anyVisible = true;
+    }
     noResults.hidden = anyVisible;
   }
   searchInput.addEventListener('input', applyFilters);
   categorySelect.addEventListener('change', applyFilters);
   sortSelect.addEventListener('change', applyFilters);
+  const tdGridWatch = document.getElementById('tdgrid');
+  if (tdGridWatch && window.MutationObserver) new MutationObserver(function () { applyFilters(); }).observe(tdGridWatch, { childList: true });
 </script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
