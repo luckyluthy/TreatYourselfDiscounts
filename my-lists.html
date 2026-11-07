@@ -68,6 +68,12 @@
     <a class="btn btn-main" href="account.html" style="text-align:center; text-decoration:none;">My Pond Account</a>
   </div>
 
+  <div class="card" id="notes-card">
+    <h2>📓 My Recipe Notes</h2>
+    <p style="font-size:14px; color:#3f6b7a; margin:4px 0 10px;">Every note from your recipe cooking journals, gathered in one list with your times cooked and last cooked dates.</p>
+    <div id="mynotes"><p class="empty">Loading your notes…</p></div>
+  </div>
+
   <footer>
     <p class="disc">Deals and prices can change or end at the store, so a saved deal shows what it cost when you saved it. Tapping Shop takes you to the brand's store, where the purchase happens. Some links are affiliate links. Part of TreatYourselfDiscounts, the Pond. Welcome to the Pond!</p>
   </footer>
@@ -130,6 +136,40 @@
     render();
   });
   document.getElementById("print-btn").addEventListener("click", function () { window.print(); });
+</script>
+<script>
+  (function () {
+    var NAMES = {};
+    function pretty(id) { return id.replace(/^recipe-/, "").replace(/-/g, " ").replace(/\b\w/g, function (c) { return c.toUpperCase(); }); }
+    function fmt(iso) { try { return new Date(iso + "T12:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }); } catch (e) { return iso; } }
+    function renderNotes() {
+      var log = {};
+      try { log = JSON.parse(localStorage.getItem("tydCookLog")) || {}; } catch (e) {}
+      var ids = Object.keys(log).filter(function (id) { return log[id] && (log[id].count > 0 || (log[id].notes || "").trim()); });
+      var root = document.getElementById("mynotes");
+      if (!ids.length) {
+        root.innerHTML = '<p class="empty">No notes yet. Open any recipe in <a href="recipes.html" style="color:#1f5f74; font-weight:700;">the cookbook</a>, tap 📓 My cooking journal, and your notes and times cooked will collect here.</p>';
+        return;
+      }
+      ids.sort(function (a, b) { return (log[b].ts || 0) - (log[a].ts || 0); });
+      root.innerHTML = ids.map(function (id) {
+        var e = log[id];
+        var meta = [];
+        if (e.count > 0) meta.push("Cooked " + e.count + "×");
+        if (e.last) meta.push("last cooked " + fmt(e.last));
+        var h = '<div style="border-top:1.5px solid #e3f0f5; padding:10px 0 2px;">'
+          + '<a href="recipes.html#' + id + '" style="color:#1f5f74; font-weight:800; font-size:15.5px; text-decoration:none;">' + esc(NAMES[id] || pretty(id)) + '</a>';
+        if (meta.length) h += '<div style="font-size:12.5px; color:#8a7a2e; font-weight:700; margin-top:2px;">' + esc(meta.join(" · ")) + '</div>';
+        if ((e.notes || "").trim()) h += '<p style="font-size:14.5px; line-height:1.55; margin:6px 0 8px; white-space:pre-wrap;">' + esc(e.notes.trim()) + '</p>';
+        return h + '</div>';
+      }).join("");
+    }
+    renderNotes();
+    fetch("search-index.json").then(function (r) { return r.json(); }).then(function (d) {
+      (d.entries || []).forEach(function (e) { if (e.t === "Recipe") NAMES[e.href.split("#")[1]] = e.title; });
+      renderNotes();
+    }).catch(function () {});
+  })();
 </script>
 <script type="module" src="auth-pill.js"></script>
 <script src="site-nav.js"></script>
