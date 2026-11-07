@@ -145,6 +145,8 @@
     function renderNotes() {
       var log = {};
       try { log = JSON.parse(localStorage.getItem("tydCookLog")) || {}; } catch (e) {}
+      var PH = {};
+      try { PH = JSON.parse(localStorage.getItem("tydCookPhotos")) || {}; } catch (e) {}
       var ids = Object.keys(log).filter(function (id) { return log[id] && (log[id].count > 0 || (log[id].notes || "").trim()); });
       var root = document.getElementById("mynotes");
       if (!ids.length) {
@@ -161,6 +163,7 @@
           + '<a href="recipes.html#' + id + '" style="color:#1f5f74; font-weight:800; font-size:15.5px; text-decoration:none;">' + esc(NAMES[id] || pretty(id)) + '</a>';
         if (meta.length) h += '<div style="font-size:12.5px; color:#8a7a2e; font-weight:700; margin-top:2px;">' + esc(meta.join(" · ")) + '</div>';
         if ((e.notes || "").trim()) h += '<p style="font-size:14.5px; line-height:1.55; margin:6px 0 8px; white-space:pre-wrap;">' + esc(e.notes.trim()) + '</p>';
+        if (PH[id] && PH[id].length) h += '<div style="display:flex; gap:6px; flex-wrap:wrap; margin:2px 0 10px;">' + PH[id].map(function (src) { return '<img src="' + src + '" style="width:64px; height:64px; object-fit:cover; border-radius:8px; border:1.5px solid #bcd9e4;" alt="Photo of my cook">'; }).join("") + '</div>';
         return h + '</div>';
       }).join("");
     }

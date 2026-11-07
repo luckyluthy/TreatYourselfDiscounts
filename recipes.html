@@ -5821,6 +5821,19 @@ hot sauce</p>
   var KEY = "tydCookLog";
   function load() { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } }
   var state = load();
+  var PH = {};
+  try { PH = JSON.parse(localStorage.getItem("tydCookPhotos")) || {}; } catch (e) {}
+  function savePhotos() { try { localStorage.setItem("tydCookPhotos", JSON.stringify(PH)); return true; } catch (e) { return false; } }
+  function photosFor(id) { return PH[id] || []; }
+  function showLb(src) {
+    var d = document.createElement("div");
+    d.className = "jlb";
+    var im = document.createElement("img");
+    im.src = src; im.alt = "My cook photo, full size";
+    d.appendChild(im);
+    d.addEventListener("click", function () { d.remove(); });
+    document.body.appendChild(d);
+  }
   var st = document.createElement("style");
   st.textContent = ".journal{margin-top:12px;border-top:1.5px dashed #bcd9e4;padding-top:10px;}"
     + ".jtoggle{background:#fff3b0;border:none;border-radius:999px;padding:7px 13px;font-weight:800;font-size:13px;color:#6b5900;cursor:pointer;font-family:inherit;}"
@@ -5835,7 +5848,14 @@ hot sauce</p>
     + ".jnotes{width:100%;margin-top:5px;border:2px solid #bcd9e4;border-radius:10px;padding:9px 10px;font-size:14px;font-family:inherit;color:#23414d;background:#fff;resize:vertical;box-sizing:border-box;}"
     + ".jrow2{display:flex;align-items:center;gap:10px;margin-top:9px;}"
     + ".jsave{background:#ffd94d;color:#6b5900;}"
-    + ".jstat{font-size:13px;font-weight:700;color:#1e5c33;}";
+    + ".jstat{font-size:13px;font-weight:700;color:#1e5c33;}"
+    + ".jphotos{display:flex;flex-wrap:wrap;gap:9px;margin-top:6px;}"
+    + ".jph{position:relative;width:76px;height:76px;}"
+    + ".jph img{width:76px;height:76px;object-fit:cover;border-radius:10px;border:2px solid #bcd9e4;display:block;cursor:pointer;}"
+    + ".jphx{position:absolute;top:-7px;right:-7px;width:22px;height:22px;border-radius:50%;border:2px solid #fff;background:#c0392b;color:#fff;font-size:13px;line-height:1;cursor:pointer;padding:0;}"
+    + ".jadd{display:inline-flex;align-items:center;gap:6px;margin-top:10px;cursor:pointer;background:#eaf6fb;color:#1f5f74;}"
+    + ".jlb{position:fixed;inset:0;background:rgba(10,25,32,.9);display:flex;align-items:center;justify-content:center;z-index:9999;padding:18px;}"
+    + ".jlb img{max-width:94vw;max-height:86vh;border-radius:14px;}";
   document.head.appendChild(st);
   function pad(n) { return (n < 10 ? "0" : "") + n; }
   function todayISO() { var d = new Date(); return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
@@ -5855,6 +5875,8 @@ hot sauce</p>
       + '<p class="jlast"></p>'
       + '<label class="jlab">My notes<textarea class="jnotes" rows="3" placeholder="What did you change? Who loved it? What should you remember next time?"></textarea></label>'
       + '<div class="jrow2"><button type="button" class="jbtn jsave">Save note</button><span class="jstat"></span></div>'
+      + '<div class="jlab" style="margin-top:12px;">Photos of my cook</div><div class="jphotos"></div>'
+      + '<label class="jbtn jadd">📷 Add a photo of my cook<input class="jfile" type="file" accept="image/*" multiple hidden></label>'
       + '</div>';
     card.appendChild(wrap);
     var body = wrap.querySelector(".jbody"), num = wrap.querySelector(".jnum"),
@@ -5863,7 +5885,7 @@ hot sauce</p>
     function render() {
       var e = entry(id);
       num.textContent = e.count;
-      badge.textContent = e.count ? "· cooked " + e.count + "×" : "";
+      badge.textContent = (e.count ? "· cooked " + e.count + "×" : "") + (photosFor(id).length ? " · 📷 " + photosFor(id).length : "");
       last.textContent = e.last ? "Last cooked: " + fmtDate(e.last) : "Not cooked yet. Tap + I cooked this after you make it!";
       if (document.activeElement !== notes && notes.value !== (e.notes || "")) notes.value = e.notes || "";
     }
@@ -5884,6 +5906,53 @@ hot sauce</p>
       var e = entry(id); e.notes = notes.value; e.ts = Date.now(); saveAll();
       jstat.textContent = "Saved ✓";
     });
+    var jphotos = wrap.querySelector(".jphotos"), jfile = wrap.querySelector(".jfile");
+    function renderPhotos() {
+      jphotos.innerHTML = photosFor(id).map(function (src, i) {
+        return '<span class="jph"><img src="' + src + '" data-i="' + i + '" alt="Photo of my cook"><button type="button" class="jphx" data-i="' + i + '" aria-label="Remove this photo">×</button></span>';
+      }).join("");
+      jphotos.querySelectorAll("img").forEach(function (im) {
+        im.addEventListener("click", function () { showLb(im.src); });
+      });
+      jphotos.querySelectorAll(".jphx").forEach(function (b) {
+        b.addEventListener("click", function () {
+          var arr = photosFor(id).slice();
+          arr.splice(Number(b.getAttribute("data-i")), 1);
+          if (arr.length) PH[id] = arr; else delete PH[id];
+          savePhotos(); renderPhotos(); render();
+        });
+      });
+    }
+    function addFile(f) {
+      var url = URL.createObjectURL(f), img = new Image();
+      img.onload = function () {
+        var max = 800, w = img.naturalWidth || 800, h = img.naturalHeight || 800,
+            sc = Math.min(1, max / Math.max(w, h)),
+            c = document.createElement("canvas");
+        c.width = Math.max(1, Math.round(w * sc)); c.height = Math.max(1, Math.round(h * sc));
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        var prev = PH[id], arr = photosFor(id).slice();
+        arr.push(c.toDataURL("image/jpeg", 0.82));
+        PH[id] = arr;
+        if (!savePhotos()) {
+          if (prev) PH[id] = prev; else delete PH[id];
+          alert("This device is out of room for recipe photos. Removing a photo or two will make space.");
+        }
+        renderPhotos(); render();
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); alert("That photo format would not load here. A regular photo or a screenshot works best."); };
+      img.src = url;
+    }
+    jfile.addEventListener("change", function () {
+      var files = Array.prototype.slice.call(jfile.files || []);
+      jfile.value = "";
+      files.forEach(function (f) {
+        if (photosFor(id).length >= 6) { alert("Up to 6 photos per recipe, so the page stays light."); return; }
+        addFile(f);
+      });
+    });
+    renderPhotos();
     render();
     card._jrender = render;
   });
