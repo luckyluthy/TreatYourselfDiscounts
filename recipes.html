@@ -5281,19 +5281,30 @@ hot sauce</p>
 (function () {
   var cards = Array.prototype.slice.call(document.querySelectorAll(".recipe-card"));
   if (!cards.length) return;
-  var parent = cards[0].parentNode, anchor = cards[0];
+  var parent = cards[0].parentNode, anchor = cards[cards.length - 1].nextSibling;
   var st = document.createElement("style");
   st.textContent = "#catchips{display:none;}"
     + ".plsec{background:#fff;border:2px solid #bcd9e4;border-radius:14px;margin:10px 0;overflow:hidden;}"
-    + ".plhead{display:flex;align-items:center;gap:11px;width:100%;background:#fff;border:none;padding:9px 12px;cursor:pointer;font-family:inherit;text-align:left;}"
+    + ".plhead{display:flex;align-items:center;gap:8px;background:#fff;padding:6px 10px 6px 6px;}"
     + ".plsec.open .plhead{background:#fffbe8;}"
+    + ".pltoggle{display:flex;align-items:center;gap:11px;flex:1;background:none;border:none;padding:4px 2px;cursor:pointer;font-family:inherit;text-align:left;min-width:0;}"
     + ".plthumb{width:44px;height:44px;border-radius:10px;background:#eaf7fb;background-position:center;background-size:cover;background-repeat:no-repeat;display:flex;align-items:center;justify-content:center;font-size:22px;flex:none;}"
-    + ".plname{font-weight:800;font-size:16.5px;color:#1f5f74;flex:1;}"
+    + ".plname{font-weight:800;font-size:16.5px;color:#1f5f74;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}"
     + ".plcount{font-size:12.5px;font-weight:700;color:#8a7a2e;background:#fff3b0;border-radius:999px;padding:3px 9px;white-space:nowrap;}"
     + ".plchev{font-size:15px;color:#1f5f74;font-weight:900;}"
+    + ".plctrls{display:flex;gap:6px;flex:none;}"
+    + ".plbtn{width:36px;height:36px;border-radius:50%;border:2px solid #bcd9e4;background:#eaf7fb;color:#1f5f74;font-size:19px;font-weight:900;cursor:pointer;font-family:inherit;line-height:1;}"
+    + ".plspin{height:36px;border-radius:999px;border:2px solid #e3c93f;background:#ffd94d;color:#6b5900;font-size:13.5px;font-weight:900;cursor:pointer;font-family:inherit;padding:0 13px;}"
+    + ".plspin:disabled{opacity:.55;cursor:default;}"
     + ".plbody{padding:2px 10px 12px;}"
     + ".plbody .recipe-card{margin-top:10px;}"
-    + "@media print{.plbody{display:block !important;}}";
+    + ".ctrack{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding:6px 2px 12px;align-items:flex-start;}"
+    + ".ctrack .recipe-card{flex:0 0 min(86%,430px);scroll-snap-align:center;margin-top:0;}"
+    + ".ctrack.dragging{scroll-snap-type:none;cursor:grabbing;}"
+    + ".plpick{background:#fff3b0;border:2px solid #ffd94d;color:#6b5900;border-radius:10px;padding:8px 12px;font-size:14.5px;margin:6px 0 2px;}"
+    + ".picked{outline:4px solid #ffd94d;outline-offset:2px;}"
+    + ".surprise{display:block;width:100%;margin:12px 0 4px;background:#ffd94d;border:2px solid #e3c93f;color:#6b5900;font-family:inherit;font-weight:900;font-size:16px;border-radius:14px;padding:13px;cursor:pointer;}"
+    + "@media print{.plbody{display:block !important;}.ctrack{display:block;overflow:visible;}.ctrack .recipe-card{margin-bottom:12px;}}";
   document.head.appendChild(st);
   var groups = {}, order = [];
   cards.forEach(function (card) {
@@ -5310,41 +5321,144 @@ hot sauce</p>
     sec._body.style.display = ""; sec._chev.textContent = "\u25BE"; sec.classList.add("open");
   }
   function toggle(sec) { if (sec._body.style.display === "none") openSec(sec); else closeSec(sec); }
-  function makeSection(name) {
+  function makeSection(name, carousel) {
     var sec = document.createElement("div"); sec.className = "plsec";
-    var head = document.createElement("button"); head.type = "button"; head.className = "plhead";
-    head.innerHTML = '<span class="plthumb"></span><span class="plname"></span><span class="plcount"></span><span class="plchev">\u25B8</span>';
-    head.querySelector(".plname").textContent = name;
+    var head = document.createElement("div"); head.className = "plhead";
+    var tog = document.createElement("button"); tog.type = "button"; tog.className = "pltoggle";
+    tog.innerHTML = '<span class="plthumb"></span><span class="plname"></span><span class="plcount"></span><span class="plchev">\u25B8</span>';
+    tog.querySelector(".plname").textContent = name;
+    head.appendChild(tog);
     var body = document.createElement("div"); body.className = "plbody"; body.style.display = "none";
     sec.appendChild(head); sec.appendChild(body);
-    sec._body = body; sec._head = head; sec._chev = head.querySelector(".plchev");
-    head.addEventListener("click", function () { toggle(sec); });
+    sec._body = body; sec._tog = tog; sec._chev = tog.querySelector(".plchev");
+    tog.addEventListener("click", function () { toggle(sec); });
+    if (carousel) {
+      var ctrls = document.createElement("div"); ctrls.className = "plctrls";
+      ctrls.innerHTML = '<button type="button" class="plbtn plprev" aria-label="Previous recipe">\u2039</button><button type="button" class="plbtn plnext" aria-label="Next recipe">\u203A</button><button type="button" class="plspin">\uD83C\uDFB0 Spin</button>';
+      head.appendChild(ctrls);
+      var pick = document.createElement("div"); pick.className = "plpick"; pick.style.display = "none";
+      var track = document.createElement("div"); track.className = "ctrack";
+      body.appendChild(pick); body.appendChild(track);
+      sec._track = track; sec._pick = pick; sec._spinBtn = ctrls.querySelector(".plspin");
+      ctrls.querySelector(".plprev").addEventListener("click", function () { step(sec, -1); });
+      ctrls.querySelector(".plnext").addEventListener("click", function () { step(sec, 1); });
+      sec._spinBtn.addEventListener("click", function () { spin(sec); });
+      dragScroll(track);
+    }
     return sec;
   }
+  function trackCards(sec) { return Array.prototype.slice.call(sec._track.children); }
+  function goTo(sec, i, smooth) {
+    var list = trackCards(sec); if (!list.length) return;
+    i = ((i % list.length) + list.length) % list.length;
+    var c = list[i], track = sec._track;
+    track.scrollTo({ left: c.offsetLeft - track.offsetLeft - (track.clientWidth - c.offsetWidth) / 2, behavior: smooth ? "smooth" : "auto" });
+    sec._idx = i;
+  }
+  function curIdx(sec) {
+    var list = trackCards(sec); if (!list.length) return 0;
+    var track = sec._track, mid = track.scrollLeft + track.clientWidth / 2, best = 0, bd = 1e18;
+    list.forEach(function (c, i) {
+      var cc = c.offsetLeft - track.offsetLeft + c.offsetWidth / 2, d = Math.abs(cc - mid);
+      if (d < bd) { bd = d; best = i; }
+    });
+    return best;
+  }
+  function clearPick(sec) {
+    trackCards(sec).forEach(function (c) { c.classList.remove("picked"); });
+    if (sec._pick) sec._pick.style.display = "none";
+  }
+  function step(sec, dir) { if (sec._spinning) return; clearPick(sec); goTo(sec, curIdx(sec) + dir, true); }
+  function land(sec, i) {
+    var list = trackCards(sec), c = list[i]; if (!c) return;
+    list.forEach(function (x) { x.classList.remove("picked"); });
+    c.classList.add("picked");
+    var h = c.querySelector("h2");
+    sec._pick.innerHTML = "\uD83C\uDF89 Tonight's pick: <b></b>";
+    sec._pick.querySelector("b").textContent = h ? h.textContent : "Your recipe";
+    sec._pick.style.display = "";
+  }
+  function spin(sec, targetIdx) {
+    if (sec._spinning) return;
+    var list = trackCards(sec); if (!list.length) return;
+    var n = list.length;
+    var target = (typeof targetIdx === "number") ? ((targetIdx % n) + n) % n : Math.floor(Math.random() * n);
+    clearPick(sec);
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) { goTo(sec, target, false); land(sec, target); return; }
+    sec._spinning = true;
+    if (sec._spinBtn) { sec._spinBtn.disabled = true; sec._spinBtn.textContent = "Spinning\u2026"; }
+    var start = curIdx(sec);
+    var delta = ((target - start) % n + n) % n;
+    var travel = n * 2.5 + delta;
+    var dur = 2800, t0 = null, lastIdx = start;
+    function frame(ts) {
+      if (!t0) t0 = ts;
+      var p = Math.min(1, (ts - t0) / dur);
+      var e = 1 - Math.pow(1 - p, 5);
+      var pos = start + travel * e;
+      var idx = Math.floor(pos) % n;
+      if (idx !== lastIdx) { lastIdx = idx; goTo(sec, idx, false); }
+      if (p < 1) { window.requestAnimationFrame(frame); return; }
+      goTo(sec, target, false);
+      sec._spinning = false;
+      if (sec._spinBtn) { sec._spinBtn.disabled = false; sec._spinBtn.textContent = "\uD83C\uDFB0 Spin"; }
+      land(sec, target);
+    }
+    window.requestAnimationFrame(frame);
+  }
+  function dragScroll(track) {
+    var down = false, sx = 0, sl = 0, moved = false;
+    track.addEventListener("pointerdown", function (e) {
+      if (e.pointerType !== "mouse") return;
+      down = true; moved = false; sx = e.clientX; sl = track.scrollLeft;
+    });
+    track.addEventListener("pointermove", function (e) {
+      if (!down) return;
+      var dx = e.clientX - sx;
+      if (Math.abs(dx) > 6 && !moved) { moved = true; track.classList.add("dragging"); }
+      if (moved) track.scrollLeft = sl - dx;
+    });
+    function up() { down = false; setTimeout(function () { track.classList.remove("dragging"); }, 30); }
+    track.addEventListener("pointerup", up);
+    track.addEventListener("pointercancel", up);
+    track.addEventListener("click", function (e) { if (moved) { e.stopPropagation(); e.preventDefault(); moved = false; } }, true);
+  }
   order.forEach(function (name) {
-    var sec = makeSection(name), list = groups[name], firstImg = "";
+    var sec = makeSection(name, true), list = groups[name], firstImg = "";
     list.forEach(function (card) {
       var im = card.querySelector("img");
       if (!firstImg && im && im.getAttribute("src")) firstImg = im.getAttribute("src");
-      sec._body.appendChild(card);
+      sec._track.appendChild(card);
     });
-    sec._head.querySelector(".plcount").textContent = list.length + (list.length === 1 ? " recipe" : " recipes");
-    var th = sec._head.querySelector(".plthumb");
+    sec._tog.querySelector(".plcount").textContent = list.length + (list.length === 1 ? " recipe" : " recipes");
+    var th = sec._tog.querySelector(".plthumb");
     if (firstImg) th.style.backgroundImage = "url(\"" + firstImg.replace(/"/g, "%22") + "\")"; else th.textContent = "\uD83C\uDF7D\uFE0F";
     sections[name] = sec;
     parent.insertBefore(sec, anchor);
   });
-  var rsec = makeSection("Search results");
+  var rsec = makeSection("Search results", false);
   rsec.style.display = "none";
   sections.__results = rsec;
   parent.insertBefore(rsec, anchor);
+  var surprise = document.createElement("button");
+  surprise.type = "button"; surprise.className = "surprise";
+  surprise.textContent = "\uD83C\uDFB2 Can't decide? Spin the whole cookbook";
+  parent.insertBefore(surprise, sections[order[0]]);
+  surprise.addEventListener("click", function () {
+    var c = cards[Math.floor(Math.random() * cards.length)];
+    var sec = sections[c.getAttribute("data-home")]; if (!sec) return;
+    openSec(sec);
+    sec.scrollIntoView({ block: "start" });
+    var idx = trackCards(sec).indexOf(c);
+    setTimeout(function () { spin(sec, idx); }, 400);
+  });
   var rcount = document.getElementById("rcount"), nomatch = document.getElementById("nomatch"),
       input = document.getElementById("recipesearch");
-  function setCountHome() { rcount.textContent = cards.length + " recipes in " + order.length + " categories. Tap a category to open its recipes, like a playlist."; }
+  function setCountHome() { rcount.textContent = cards.length + " recipes in " + order.length + " categories. Open one to flip through its carousel, or hit Spin and let it choose."; }
   function restore() {
     cards.forEach(function (card) {
       var sec = sections[card.getAttribute("data-home")];
-      if (sec) sec._body.appendChild(card);
+      if (sec) (sec._track || sec._body).appendChild(card);
       card.classList.remove("hide");
     });
     Object.keys(sections).forEach(function (k) { if (k !== "__results") sections[k].style.display = ""; });
@@ -5361,8 +5475,8 @@ hot sauce</p>
     var matches = cards.filter(function (c) { return (c.getAttribute("data-search") || "").indexOf(q) !== -1; });
     Object.keys(sections).forEach(function (k) { if (k !== "__results") sections[k].style.display = "none"; });
     matches.forEach(function (c) { rsec._body.appendChild(c); });
-    rsec._head.querySelector(".plname").textContent = "Results for \u201C" + input.value.trim() + "\u201D";
-    rsec._head.querySelector(".plcount").textContent = matches.length + (matches.length === 1 ? " recipe" : " recipes");
+    rsec._tog.querySelector(".plname").textContent = "Results for \u201C" + input.value.trim() + "\u201D";
+    rsec._tog.querySelector(".plcount").textContent = matches.length + (matches.length === 1 ? " recipe" : " recipes");
     rsec.style.display = "";
     openSec(rsec);
     nomatch.classList.toggle("show", matches.length === 0);
@@ -5374,7 +5488,7 @@ hot sauce</p>
     var card = document.getElementById(id);
     if (!card || !card.classList.contains("recipe-card")) return;
     if (rsec.style.display !== "none" && rsec._body.contains(card)) openSec(rsec);
-    else { var sec = sections[card.getAttribute("data-home")]; if (sec) openSec(sec); }
+    else { var sec = sections[card.getAttribute("data-home")]; if (sec) { openSec(sec); if (sec._track) goTo(sec, trackCards(sec).indexOf(card), false); } }
     setTimeout(function () { card.scrollIntoView({ block: "start" }); }, 80);
   }
   window.addEventListener("hashchange", openHash);
