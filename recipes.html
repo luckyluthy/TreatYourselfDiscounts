@@ -5278,30 +5278,108 @@ hot sauce</p>
 </script>
 
 <script>
-  var activeCat = "";
-  function applyFilter() {
-    var q = document.getElementById("recipesearch").value.trim().toLowerCase();
-    var shown = 0;
-    document.querySelectorAll(".recipe-card").forEach(function (card) {
-      var okCat = !activeCat || (card.getAttribute("data-cats") || "").split("|").indexOf(activeCat) !== -1;
-      var okQ = !q || (card.getAttribute("data-search") || "").indexOf(q) !== -1;
-      var show = okCat && okQ;
-      card.classList.toggle("hide", !show);
-      if (show) shown++;
-    });
-    document.getElementById("rcount").textContent = "Showing " + shown + " of " + document.querySelectorAll(".recipe-card").length + " recipes";
-    document.getElementById("nomatch").classList.toggle("show", shown === 0);
-  }
-  document.getElementById("recipesearch").addEventListener("input", applyFilter);
-  document.querySelectorAll("#catchips .chipbtn").forEach(function (b) {
-    b.addEventListener("click", function () {
-      document.querySelectorAll("#catchips .chipbtn").forEach(function (x) { x.classList.remove("active"); });
-      b.classList.add("active");
-      activeCat = b.getAttribute("data-cat") || "";
-      applyFilter();
-    });
+(function () {
+  var cards = Array.prototype.slice.call(document.querySelectorAll(".recipe-card"));
+  if (!cards.length) return;
+  var parent = cards[0].parentNode, anchor = cards[0];
+  var st = document.createElement("style");
+  st.textContent = "#catchips{display:none;}"
+    + ".plsec{background:#fff;border:2px solid #bcd9e4;border-radius:14px;margin:10px 0;overflow:hidden;}"
+    + ".plhead{display:flex;align-items:center;gap:11px;width:100%;background:#fff;border:none;padding:9px 12px;cursor:pointer;font-family:inherit;text-align:left;}"
+    + ".plsec.open .plhead{background:#fffbe8;}"
+    + ".plthumb{width:44px;height:44px;border-radius:10px;background:#eaf7fb;background-position:center;background-size:cover;background-repeat:no-repeat;display:flex;align-items:center;justify-content:center;font-size:22px;flex:none;}"
+    + ".plname{font-weight:800;font-size:16.5px;color:#1f5f74;flex:1;}"
+    + ".plcount{font-size:12.5px;font-weight:700;color:#8a7a2e;background:#fff3b0;border-radius:999px;padding:3px 9px;white-space:nowrap;}"
+    + ".plchev{font-size:15px;color:#1f5f74;font-weight:900;}"
+    + ".plbody{padding:2px 10px 12px;}"
+    + ".plbody .recipe-card{margin-top:10px;}"
+    + "@media print{.plbody{display:block !important;}}";
+  document.head.appendChild(st);
+  var groups = {}, order = [];
+  cards.forEach(function (card) {
+    var home = (card.getAttribute("data-cats") || "Recipes").split("|")[0] || "Recipes";
+    card.setAttribute("data-home", home);
+    if (!groups[home]) { groups[home] = []; order.push(home); }
+    groups[home].push(card);
   });
-  applyFilter();
+  order.sort(function (a, b) { return groups[b].length - groups[a].length; });
+  var sections = {};
+  function closeSec(sec) { sec._body.style.display = "none"; sec._chev.textContent = "\u25B8"; sec.classList.remove("open"); }
+  function openSec(sec) {
+    Object.keys(sections).forEach(function (k) { if (sections[k] !== sec) closeSec(sections[k]); });
+    sec._body.style.display = ""; sec._chev.textContent = "\u25BE"; sec.classList.add("open");
+  }
+  function toggle(sec) { if (sec._body.style.display === "none") openSec(sec); else closeSec(sec); }
+  function makeSection(name) {
+    var sec = document.createElement("div"); sec.className = "plsec";
+    var head = document.createElement("button"); head.type = "button"; head.className = "plhead";
+    head.innerHTML = '<span class="plthumb"></span><span class="plname"></span><span class="plcount"></span><span class="plchev">\u25B8</span>';
+    head.querySelector(".plname").textContent = name;
+    var body = document.createElement("div"); body.className = "plbody"; body.style.display = "none";
+    sec.appendChild(head); sec.appendChild(body);
+    sec._body = body; sec._head = head; sec._chev = head.querySelector(".plchev");
+    head.addEventListener("click", function () { toggle(sec); });
+    return sec;
+  }
+  order.forEach(function (name) {
+    var sec = makeSection(name), list = groups[name], firstImg = "";
+    list.forEach(function (card) {
+      var im = card.querySelector("img");
+      if (!firstImg && im && im.getAttribute("src")) firstImg = im.getAttribute("src");
+      sec._body.appendChild(card);
+    });
+    sec._head.querySelector(".plcount").textContent = list.length + (list.length === 1 ? " recipe" : " recipes");
+    var th = sec._head.querySelector(".plthumb");
+    if (firstImg) th.style.backgroundImage = "url(\"" + firstImg.replace(/"/g, "%22") + "\")"; else th.textContent = "\uD83C\uDF7D\uFE0F";
+    sections[name] = sec;
+    parent.insertBefore(sec, anchor);
+  });
+  var rsec = makeSection("Search results");
+  rsec.style.display = "none";
+  sections.__results = rsec;
+  parent.insertBefore(rsec, anchor);
+  var rcount = document.getElementById("rcount"), nomatch = document.getElementById("nomatch"),
+      input = document.getElementById("recipesearch");
+  function setCountHome() { rcount.textContent = cards.length + " recipes in " + order.length + " categories. Tap a category to open its recipes, like a playlist."; }
+  function restore() {
+    cards.forEach(function (card) {
+      var sec = sections[card.getAttribute("data-home")];
+      if (sec) sec._body.appendChild(card);
+      card.classList.remove("hide");
+    });
+    Object.keys(sections).forEach(function (k) { if (k !== "__results") sections[k].style.display = ""; });
+    rsec.style.display = "none";
+    nomatch.classList.remove("show");
+  }
+  restore();
+  setCountHome();
+  if (order.length) openSec(sections[order[0]]);
+  input.addEventListener("input", function () {
+    var q = input.value.trim().toLowerCase();
+    restore();
+    if (!q) { setCountHome(); if (order.length) openSec(sections[order[0]]); return; }
+    var matches = cards.filter(function (c) { return (c.getAttribute("data-search") || "").indexOf(q) !== -1; });
+    Object.keys(sections).forEach(function (k) { if (k !== "__results") sections[k].style.display = "none"; });
+    matches.forEach(function (c) { rsec._body.appendChild(c); });
+    rsec._head.querySelector(".plname").textContent = "Results for \u201C" + input.value.trim() + "\u201D";
+    rsec._head.querySelector(".plcount").textContent = matches.length + (matches.length === 1 ? " recipe" : " recipes");
+    rsec.style.display = "";
+    openSec(rsec);
+    nomatch.classList.toggle("show", matches.length === 0);
+    rcount.textContent = "Showing " + matches.length + " of " + cards.length + " recipes";
+  });
+  function openHash() {
+    var id = (location.hash || "").replace(/^#/, "");
+    if (!id) return;
+    var card = document.getElementById(id);
+    if (!card || !card.classList.contains("recipe-card")) return;
+    if (rsec.style.display !== "none" && rsec._body.contains(card)) openSec(rsec);
+    else { var sec = sections[card.getAttribute("data-home")]; if (sec) openSec(sec); }
+    setTimeout(function () { card.scrollIntoView({ block: "start" }); }, 80);
+  }
+  window.addEventListener("hashchange", openHash);
+  openHash();
+})();
 </script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
@@ -5823,6 +5901,12 @@ hot sauce</p>
   var state = load();
   var PH = {};
   try { PH = JSON.parse(localStorage.getItem("tydCookPhotos")) || {}; } catch (e) {}
+  function genPid() { return "L" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+  Object.keys(PH).forEach(function (id) {
+    PH[id] = (PH[id] || []).map(function (e) { return typeof e === "string" ? { p: genPid(), s: e } : e; });
+  });
+  var photoRenderers = [], photoUpFn = null, photoDelFn = null;
+  function refreshPhotos() { photoRenderers.forEach(function (f) { try { f(); } catch (e) {} }); }
   function savePhotos() { try { localStorage.setItem("tydCookPhotos", JSON.stringify(PH)); return true; } catch (e) { return false; } }
   function photosFor(id) { return PH[id] || []; }
   function showLb(src) {
@@ -5908,8 +5992,8 @@ hot sauce</p>
     });
     var jphotos = wrap.querySelector(".jphotos"), jfile = wrap.querySelector(".jfile");
     function renderPhotos() {
-      jphotos.innerHTML = photosFor(id).map(function (src, i) {
-        return '<span class="jph"><img src="' + src + '" data-i="' + i + '" alt="Photo of my cook"><button type="button" class="jphx" data-i="' + i + '" aria-label="Remove this photo">×</button></span>';
+      jphotos.innerHTML = photosFor(id).map(function (entry, i) {
+        return '<span class="jph"><img src="' + entry.s + '" data-i="' + i + '" alt="Photo of my cook"><button type="button" class="jphx" data-i="' + i + '" aria-label="Remove this photo">×</button></span>';
       }).join("");
       jphotos.querySelectorAll("img").forEach(function (im) {
         im.addEventListener("click", function () { showLb(im.src); });
@@ -5917,12 +6001,14 @@ hot sauce</p>
       jphotos.querySelectorAll(".jphx").forEach(function (b) {
         b.addEventListener("click", function () {
           var arr = photosFor(id).slice();
-          arr.splice(Number(b.getAttribute("data-i")), 1);
+          var gone = arr.splice(Number(b.getAttribute("data-i")), 1)[0];
+          if (gone && gone.p && gone.p.charAt(0) !== "L" && photoDelFn) photoDelFn(gone.p);
           if (arr.length) PH[id] = arr; else delete PH[id];
           savePhotos(); renderPhotos(); render();
         });
       });
     }
+    photoRenderers.push(renderPhotos);
     function addFile(f) {
       var url = URL.createObjectURL(f), img = new Image();
       img.onload = function () {
@@ -5933,12 +6019,19 @@ hot sauce</p>
         c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
         URL.revokeObjectURL(url);
         var prev = PH[id], arr = photosFor(id).slice();
-        arr.push(c.toDataURL("image/jpeg", 0.82));
+        var data = c.toDataURL("image/jpeg", 0.82);
+        if (data.length > 900000) {
+          var c2 = document.createElement("canvas"), sc2 = 600 / Math.max(c.width, c.height);
+          c2.width = Math.max(1, Math.round(c.width * sc2)); c2.height = Math.max(1, Math.round(c.height * sc2));
+          c2.getContext("2d").drawImage(c, 0, 0, c2.width, c2.height);
+          data = c2.toDataURL("image/jpeg", 0.72);
+        }
+        arr.push({ p: genPid(), s: data });
         PH[id] = arr;
         if (!savePhotos()) {
           if (prev) PH[id] = prev; else delete PH[id];
           alert("This device is out of room for recipe photos. Removing a photo or two will make space.");
-        }
+        } else if (photoUpFn) photoUpFn();
         renderPhotos(); render();
       };
       img.onerror = function () { URL.revokeObjectURL(url); alert("That photo format would not load here. A regular photo or a screenshot works best."); };
@@ -5979,7 +6072,41 @@ hot sauce</p>
     try { app = mods[0].getApp(); } catch (e) { app = mods[0].initializeApp(cfg); }
     var auth = mods[1].getAuth(app);
     var db = mods[2].getFirestore(app);
-    fsx = { setDoc: mods[2].setDoc, doc: mods[2].doc, db: db };
+    fsx = { setDoc: mods[2].setDoc, doc: mods[2].doc, db: db, collection: mods[2].collection, getDocs: mods[2].getDocs, deleteDoc: mods[2].deleteDoc };
+    function upPhotos() {
+      if (!uid || !fsx) return;
+      Object.keys(PH).forEach(function (id) {
+        PH[id].forEach(function (e) {
+          if (!e.p || e.p.charAt(0) !== "L") return;
+          var np = "p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+          e.p = np;
+          fsx.setDoc(fsx.doc(fsx.db, "users", uid, "photos", np), { recipe: id, data: e.s, ts: Date.now() })
+            .then(function () { savePhotos(); })
+            .catch(function () {});
+        });
+      });
+    }
+    function pullPhotos() {
+      if (!uid || !fsx) return;
+      fsx.getDocs(fsx.collection(fsx.db, "users", uid, "photos")).then(function (qs) {
+        var newPH = {};
+        qs.forEach(function (d) {
+          var v = d.data();
+          if (v && v.recipe && v.data) (newPH[v.recipe] = newPH[v.recipe] || []).push({ p: d.id, s: v.data });
+        });
+        Object.keys(PH).forEach(function (id) {
+          PH[id].forEach(function (e) { if (e.p && e.p.charAt(0) === "L") (newPH[id] = newPH[id] || []).push(e); });
+        });
+        PH = newPH;
+        savePhotos(); refreshPhotos(); renderAll();
+        upPhotos();
+      }).catch(function () {});
+    }
+    photoUpFn = upPhotos;
+    photoDelFn = function (pid) {
+      if (!uid || !fsx) return;
+      fsx.deleteDoc(fsx.doc(fsx.db, "users", uid, "photos", pid)).catch(function () {});
+    };
     mods[1].onAuthStateChanged(auth, function (user) {
       if (!user || merged) { if (!user) uid = null; return; }
       uid = user.uid; merged = true;
@@ -5988,7 +6115,7 @@ hot sauce</p>
         Object.keys(remote).forEach(function (id) {
           if (!state[id] || (remote[id].ts || 0) > (state[id].ts || 0)) state[id] = remote[id];
         });
-        saveLocal(); renderAll(); pushNow();
+        saveLocal(); renderAll(); pushNow(); pullPhotos();
       }).catch(function () {});
     });
   }).catch(function () {});

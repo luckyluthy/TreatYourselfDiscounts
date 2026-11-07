@@ -163,7 +163,7 @@
           + '<a href="recipes.html#' + id + '" style="color:#1f5f74; font-weight:800; font-size:15.5px; text-decoration:none;">' + esc(NAMES[id] || pretty(id)) + '</a>';
         if (meta.length) h += '<div style="font-size:12.5px; color:#8a7a2e; font-weight:700; margin-top:2px;">' + esc(meta.join(" · ")) + '</div>';
         if ((e.notes || "").trim()) h += '<p style="font-size:14.5px; line-height:1.55; margin:6px 0 8px; white-space:pre-wrap;">' + esc(e.notes.trim()) + '</p>';
-        if (PH[id] && PH[id].length) h += '<div style="display:flex; gap:6px; flex-wrap:wrap; margin:2px 0 10px;">' + PH[id].map(function (src) { return '<img src="' + src + '" style="width:64px; height:64px; object-fit:cover; border-radius:8px; border:1.5px solid #bcd9e4;" alt="Photo of my cook">'; }).join("") + '</div>';
+        if (PH[id] && PH[id].length) h += '<div style="display:flex; gap:6px; flex-wrap:wrap; margin:2px 0 10px;">' + PH[id].map(function (e) { var src = typeof e === "string" ? e : e.s; return '<img src="' + src + '" style="width:64px; height:64px; object-fit:cover; border-radius:8px; border:1.5px solid #bcd9e4;" alt="Photo of my cook">'; }).join("") + '</div>';
         return h + '</div>';
       }).join("");
     }
@@ -172,7 +172,36 @@
       (d.entries || []).forEach(function (e) { if (e.t === "Recipe") NAMES[e.href.split("#")[1]] = e.title; });
       renderNotes();
     }).catch(function () {});
+    window.addEventListener("tydphotosync", renderNotes);
   })();
+</script>
+<script type="module">
+  import { initializeApp, getApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  var cfg = { apiKey: "AIzaSyDoy5WjnhDlBqZaqZDUFkX6XodiXvQmr7I", authDomain: "treatyourselfdiscounts-881a9.firebaseapp.com", projectId: "treatyourselfdiscounts-881a9", storageBucket: "treatyourselfdiscounts-881a9.firebasestorage.app", messagingSenderId: "635205549581", appId: "1:635205549581:web:698e046036b14f33f81f44" };
+  var app; try { app = getApp(); } catch (e) { app = initializeApp(cfg); }
+  var auth = getAuth(app), db = getFirestore(app);
+  onAuthStateChanged(auth, function (user) {
+    if (!user) return;
+    getDocs(collection(db, "users", user.uid, "photos")).then(function (qs) {
+      var local = {};
+      try { local = JSON.parse(localStorage.getItem("tydCookPhotos")) || {}; } catch (e) {}
+      var merged = {};
+      qs.forEach(function (d) {
+        var v = d.data();
+        if (v && v.recipe && v.data) (merged[v.recipe] = merged[v.recipe] || []).push({ p: d.id, s: v.data });
+      });
+      Object.keys(local).forEach(function (id) {
+        (local[id] || []).forEach(function (e) {
+          var o = typeof e === "string" ? { p: "L" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8), s: e } : e;
+          if (o.p && o.p.charAt(0) === "L") (merged[id] = merged[id] || []).push(o);
+        });
+      });
+      try { localStorage.setItem("tydCookPhotos", JSON.stringify(merged)); } catch (e) {}
+      window.dispatchEvent(new Event("tydphotosync"));
+    }).catch(function () {});
+  });
 </script>
 <script type="module" src="auth-pill.js"></script>
 <script src="site-nav.js"></script>
