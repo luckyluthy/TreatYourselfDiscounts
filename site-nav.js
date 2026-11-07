@@ -12,6 +12,14 @@
     + "#tydnav{position:fixed;left:0;right:0;bottom:0;z-index:9990;background:rgba(255,255,255,.96);border-top:2px solid #bcd9e4;display:flex;justify-content:space-around;padding:6px 2px calc(6px + env(safe-area-inset-bottom));font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;}"
     + "#tydnav a,#tydnav button{flex:1;background:none;border:none;cursor:pointer;text-decoration:none;color:#5b7d89;font-size:10.5px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:2px;padding:2px 0;font-family:inherit;}"
     + "#tydnav .ic{font-size:19px;line-height:1;}"
+    + "#tydnav{transition:transform .25s ease;}"
+    + "body.tyd-nav-closed #tydnav{transform:translateY(112%);}"
+    + "body.tyd-nav-closed{padding-bottom:20px !important;}"
+    + "body.tyd-nav-closed .tyd-pill{bottom:76px !important;}"
+    + "body.tyd-nav-closed .gpill{bottom:16px !important;}"
+    + "body.tyd-nav-closed .tyd-toast{bottom:140px !important;}"
+    + "#tydnavfab{position:fixed;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:9992;background:#ffd94d;color:#6b5900;border:2px solid #e8c832;border-radius:999px;padding:10px 16px;font-weight:800;font-size:13.5px;cursor:pointer;box-shadow:0 4px 14px rgba(35,65,77,.25);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;transition:bottom .25s ease;}"
+    + "body.tyd-nav-open #tydnavfab{bottom:calc(80px + env(safe-area-inset-bottom));}"
     + "#tydnav .on{color:#1f5f74;font-weight:800;}"
     + "body{padding-bottom:88px !important;}"
     + ".tyd-pill{bottom:100px !important;}"
@@ -68,6 +76,23 @@
   inst.innerHTML = '<span class="ic">⬇️</span>App';
   nav.appendChild(inst);
   document.body.appendChild(nav);
+
+  var fab = document.createElement("button");
+  fab.id = "tydnavfab";
+  fab.type = "button";
+  document.body.appendChild(fab);
+  function setNavOpen(open) {
+    document.body.classList.toggle("tyd-nav-open", open);
+    document.body.classList.toggle("tyd-nav-closed", !open);
+    fab.innerHTML = open ? "⌄ Hide" : "🦆 Menu";
+    try { localStorage.setItem("tydNavOpen", open ? "1" : "0"); } catch (e) {}
+  }
+  fab.addEventListener("click", function () {
+    setNavOpen(!document.body.classList.contains("tyd-nav-open"));
+  });
+  var startOpen = false;
+  try { startOpen = localStorage.getItem("tydNavOpen") === "1"; } catch (e) {}
+  setNavOpen(startOpen);
 
   var overlay = document.createElement("div");
   overlay.id = "tydinstall";
