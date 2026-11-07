@@ -38,6 +38,9 @@
   .sayable { border-bottom: 2px dotted #1f5f74; cursor: pointer; font-weight: 700; }
   .soundbtn { display: block; margin: 12px auto 0; background: #ffd94d; border: 2px solid #e3c93f; color: #6b5900; font-family: inherit; font-weight: 800; font-size: 14.5px; border-radius: 999px; padding: 9px 18px; cursor: pointer; }
   .soundbtn.off { background: #eaf7fb; border-color: #bcd9e4; color: #1f5f74; }
+  .quizmsg { text-align: center; font-weight: 800; color: #1f5f74; margin: 12px 0 0; font-size: 15px; }
+  .quizchoices .vowel.right { outline: 4px solid #2e9e5b; outline-offset: 1px; }
+  .quizchoices .vowel.wrong { outline: 4px solid #e5322d; outline-offset: 1px; }
   footer { margin-top: 26px; text-align: center; }
   .disc { font-size: 12px; color: #5b7d89; line-height: 1.5; max-width: 560px; margin: 10px auto 0; }
 </style>
@@ -49,7 +52,7 @@
 
   <header class="top">
     <h1>🇰🇷 TYD's Korean Corner</h1>
-    <p class="sub">Learning to read Korean with colors, one block at a time. This is TYD's own study corner at the Pond.</p>
+    <p class="sub">TYD's Korean learning center: letters, sounds, words, phrases, and a listening game, one block at a time.</p>
   </header>
 
   <div class="card">
@@ -80,6 +83,50 @@
   </div>
 
   <div class="card">
+    <h2>The consonants</h2>
+    <p><b>Tap any letter to hear it</b> with an ㅏ, the way Korean kids learn them. The five double letters at the end are the same sounds, said stronger.</p>
+    <div class="vowels">
+      <div class="vowel" data-say="가" data-show="ㄱ · g · hear it as 가 (ga)"><b>ㄱ</b><span>G</span></div>
+      <div class="vowel" data-say="나" data-show="ㄴ · n · hear it as 나 (na)"><b>ㄴ</b><span>N</span></div>
+      <div class="vowel" data-say="다" data-show="ㄷ · d · hear it as 다 (da)"><b>ㄷ</b><span>D</span></div>
+      <div class="vowel" data-say="라" data-show="ㄹ · r or l · hear it as 라 (ra)"><b>ㄹ</b><span>R/L</span></div>
+      <div class="vowel" data-say="마" data-show="ㅁ · m · hear it as 마 (ma)"><b>ㅁ</b><span>M</span></div>
+      <div class="vowel" data-say="바" data-show="ㅂ · b · hear it as 바 (ba)"><b>ㅂ</b><span>B</span></div>
+      <div class="vowel" data-say="사" data-show="ㅅ · s · hear it as 사 (sa)"><b>ㅅ</b><span>S</span></div>
+      <div class="vowel" data-say="아" data-show="ㅇ · silent at the start of a block, ng at the end · hear 아 (a)"><b>ㅇ</b><span>silent / NG</span></div>
+      <div class="vowel" data-say="자" data-show="ㅈ · j · hear it as 자 (ja)"><b>ㅈ</b><span>J</span></div>
+      <div class="vowel" data-say="차" data-show="ㅊ · ch · hear it as 차 (cha)"><b>ㅊ</b><span>CH</span></div>
+      <div class="vowel" data-say="카" data-show="ㅋ · k · hear it as 카 (ka)"><b>ㅋ</b><span>K</span></div>
+      <div class="vowel" data-say="타" data-show="ㅌ · t · hear it as 타 (ta)"><b>ㅌ</b><span>T</span></div>
+      <div class="vowel" data-say="파" data-show="ㅍ · p · hear it as 파 (pa)"><b>ㅍ</b><span>P</span></div>
+      <div class="vowel" data-say="하" data-show="ㅎ · h · hear it as 하 (ha)"><b>ㅎ</b><span>H</span></div>
+      <div class="vowel" data-say="까" data-show="ㄲ · kk, the strong version of ㄱ · hear it as 까 (kka)"><b>ㄲ</b><span>KK</span></div>
+      <div class="vowel" data-say="따" data-show="ㄸ · tt, the strong version of ㄷ · hear it as 따 (tta)"><b>ㄸ</b><span>TT</span></div>
+      <div class="vowel" data-say="빠" data-show="ㅃ · pp, the strong version of ㅂ · hear it as 빠 (ppa)"><b>ㅃ</b><span>PP</span></div>
+      <div class="vowel" data-say="싸" data-show="ㅆ · ss, the strong version of ㅅ · hear it as 싸 (ssa)"><b>ㅆ</b><span>SS</span></div>
+      <div class="vowel" data-say="짜" data-show="ㅉ · jj, the strong version of ㅈ · hear it as 짜 (jja)"><b>ㅉ</b><span>JJ</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>More vowels</h2>
+    <p>Once the 10 basic vowels feel friendly, these 11 are waiting. They are built from the basic ones, and they sit in blocks the same way.</p>
+    <div class="vowels">
+      <div class="vowel" data-say="애" data-show="ㅐ · ae · sounds like 'e' in bed"><b>ㅐ</b><span>AE</span></div>
+      <div class="vowel" data-say="얘" data-show="ㅒ · yae · sounds like 'ye' in yes"><b>ㅒ</b><span>YAE</span></div>
+      <div class="vowel" data-say="에" data-show="ㅔ · e · sounds like 'e' in bed, a breath closer to ay"><b>ㅔ</b><span>E</span></div>
+      <div class="vowel" data-say="예" data-show="ㅖ · ye · sounds like 'ye' in yes"><b>ㅖ</b><span>YE</span></div>
+      <div class="vowel" data-say="와" data-show="ㅘ · wa · sounds like 'wa' in water"><b>ㅘ</b><span>WA</span></div>
+      <div class="vowel" data-say="왜" data-show="ㅙ · wae · sounds like 'we' in wet"><b>ㅙ</b><span>WAE</span></div>
+      <div class="vowel" data-say="외" data-show="ㅚ · oe · sounds like 'we' in wet, with rounded lips"><b>ㅚ</b><span>OE</span></div>
+      <div class="vowel" data-say="워" data-show="ㅝ · wo · sounds like 'wuh'"><b>ㅝ</b><span>WO</span></div>
+      <div class="vowel" data-say="웨" data-show="ㅞ · we · sounds like 'we' in wet"><b>ㅞ</b><span>WE</span></div>
+      <div class="vowel" data-say="위" data-show="ㅟ · wi · sounds like 'wee'"><b>ㅟ</b><span>WI</span></div>
+      <div class="vowel" data-say="의" data-show="ㅢ · ui · sounds like 'eui' said quickly"><b>ㅢ</b><span>UI</span></div>
+    </div>
+  </div>
+
+  <div class="card">
     <h2>Words TYD can read</h2>
     <p><b>Tap any word to hear it</b> and see how it is said.</p>
     <div class="words">
@@ -90,6 +137,29 @@
       <div class="word" data-say="버스" data-show="버스 · beo-seu · bus"><b>버스</b><span>bus</span></div>
     </div>
     <p>Small words, read block by block. 레고 being on the list will surprise exactly no one at the Pond.</p>
+  </div>
+
+  <div class="card">
+    <h2>Everyday phrases</h2>
+    <p><b>Tap any phrase to hear it</b> and see how it is said, syllable by syllable.</p>
+    <div class="words">
+      <div class="word" data-say="안녕하세요" data-show="안녕하세요 · an-nyeong-ha-se-yo · hello (polite)"><b>안녕하세요</b><span>hello (polite)</span></div>
+      <div class="word" data-say="감사합니다" data-show="감사합니다 · gam-sa-ham-ni-da · thank you"><b>감사합니다</b><span>thank you</span></div>
+      <div class="word" data-say="네" data-show="네 · ne · yes"><b>네</b><span>yes</span></div>
+      <div class="word" data-say="아니요" data-show="아니요 · a-ni-yo · no"><b>아니요</b><span>no</span></div>
+      <div class="word" data-say="미안해요" data-show="미안해요 · mi-an-hae-yo · I am sorry"><b>미안해요</b><span>I'm sorry</span></div>
+      <div class="word" data-say="사랑해요" data-show="사랑해요 · sa-rang-hae-yo · I love you"><b>사랑해요</b><span>I love you</span></div>
+      <div class="word" data-say="안녕히 가세요" data-show="안녕히 가세요 · an-nyeong-hi ga-se-yo · goodbye"><b>안녕히 가세요</b><span>goodbye</span></div>
+      <div class="word" data-say="잘 자요" data-show="잘 자요 · jal ja-yo · good night"><b>잘 자요</b><span>good night</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>🎧 Listening quiz</h2>
+    <p>Tap play, listen, then tap the vowel you heard. Sound needs to be on for this game (the Sound button up in the vowels section).</p>
+    <button type="button" class="soundbtn" id="quizplay">▶️ Play a vowel</button>
+    <div class="quizchoices vowels" id="quizchoices" style="margin-top:12px;"></div>
+    <p class="quizmsg" id="quizmsg">Score: 0 / 0</p>
   </div>
 
   <div class="card">
@@ -144,7 +214,7 @@
     if (!soundOn) return;
     say(text);
   }
-  var CLIPS = { "아": "a", "야": "ya", "어": "eo", "여": "yeo", "오": "o", "요": "yo", "우": "u", "유": "yu", "으": "eu", "이": "i", "라디오": "radio", "레고": "lego", "미래": "mirae", "비누": "binoo", "버스": "bus", "사랑": "sarang", "여자": "yeoja", "우유": "uyu" };
+  var CLIPS = { "아": "a", "야": "ya", "어": "eo", "여": "yeo", "오": "o", "요": "yo", "우": "u", "유": "yu", "으": "eu", "이": "i", "라디오": "radio", "레고": "lego", "미래": "mirae", "비누": "binoo", "버스": "bus", "사랑": "sarang", "여자": "yeoja", "우유": "uyu", "가": "ga", "나": "na", "다": "da", "라": "ra", "마": "ma", "바": "ba", "사": "sa", "자": "ja", "차": "cha", "카": "ka", "타": "ta", "파": "pa", "하": "ha", "까": "kka", "따": "tta", "빠": "ppa", "싸": "ssa", "짜": "jja", "애": "ae", "얘": "yae", "에": "e", "예": "ye", "와": "wa", "왜": "wae", "외": "oe", "워": "wo", "웨": "we", "위": "wi", "의": "ui", "안녕하세요": "hello", "감사합니다": "gamsa", "네": "ne", "아니요": "aniyo", "미안해요": "mian", "사랑해요": "saranghae", "안녕히 가세요": "bye", "잘 자요": "goodnight" };
   var player = null;
   function playClip(path) {
     try {
@@ -161,6 +231,7 @@
     if (!slug) { say(text); return; }
     playClip("audio/ko/" + slug + ".mp3").then(function (ok) { if (!ok) say(text); });
   }
+  window.TYDKorean = { playFor: playFor, isOn: function () { return soundOn; } };
   document.querySelectorAll("[data-say]").forEach(function (el) {
     el.setAttribute("role", "button");
     el.setAttribute("tabindex", "0");
@@ -171,6 +242,50 @@
     el.addEventListener("click", go);
     el.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
   });
+})();
+</script>
+<script>
+(function () {
+  var V = [
+    { j: "ㅏ", slug: "a", rom: "A" }, { j: "ㅑ", slug: "ya", rom: "Ya" }, { j: "ㅓ", slug: "eo", rom: "Eo" },
+    { j: "ㅕ", slug: "yeo", rom: "Yeo" }, { j: "ㅗ", slug: "o", rom: "Oh" }, { j: "ㅛ", slug: "yo", rom: "Yo" },
+    { j: "ㅜ", slug: "u", rom: "U" }, { j: "ㅠ", slug: "yu", rom: "Yu" }, { j: "ㅡ", slug: "eu", rom: "Eu" },
+    { j: "ㅣ", slug: "i", rom: "I" }
+  ];
+  var playBtn = document.getElementById("quizplay"), box = document.getElementById("quizchoices"), msg = document.getElementById("quizmsg");
+  if (!playBtn || !box || !msg) return;
+  var answer = null, score = 0, total = 0, locked = false;
+  function shuffle(a) { for (var i = a.length - 1; i > 0; i--) { var k = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[k]; a[k] = t; } return a; }
+  function scoreLine(extra) { msg.textContent = (extra ? extra + " · " : "") + "Score: " + score + " / " + total; }
+  function round() {
+    if (window.TYDKorean && !window.TYDKorean.isOn()) { msg.textContent = "Turn the Sound on first (yellow button in the vowels section), then tap play."; return; }
+    answer = V[Math.floor(Math.random() * V.length)];
+    locked = false;
+    playBtn.setAttribute("data-answer", answer.j);
+    var picks = shuffle(V.filter(function (v) { return v !== answer; })).slice(0, 3);
+    var choices = shuffle([answer].concat(picks));
+    box.innerHTML = "";
+    choices.forEach(function (v) {
+      var d = document.createElement("div");
+      d.className = "vowel";
+      d.innerHTML = "<b>" + v.j + "</b><span>" + v.rom + "</span>";
+      d.addEventListener("click", function () {
+        if (locked || !answer) return;
+        locked = true;
+        total++;
+        if (v === answer) { score++; d.classList.add("right"); scoreLine("✅ That was " + answer.j + " (" + answer.rom + ")"); }
+        else {
+          d.classList.add("wrong");
+          box.querySelectorAll(".vowel").forEach(function (el) { if (el.querySelector("b").textContent === answer.j) el.classList.add("right"); });
+          scoreLine("❌ That was " + answer.j + " (" + answer.rom + "). Tap play for the next one");
+        }
+      });
+      box.appendChild(d);
+    });
+    scoreLine("Listen, then tap the vowel you heard");
+    if (window.TYDKorean) window.TYDKorean.playFor(answer.j === "ㅏ" ? "아" : answer.j === "ㅑ" ? "야" : answer.j === "ㅓ" ? "어" : answer.j === "ㅕ" ? "여" : answer.j === "ㅗ" ? "오" : answer.j === "ㅛ" ? "요" : answer.j === "ㅜ" ? "우" : answer.j === "ㅠ" ? "유" : answer.j === "ㅡ" ? "으" : "이");
+  }
+  playBtn.addEventListener("click", round);
 })();
 </script>
 <script src="site-nav.js"></script>
