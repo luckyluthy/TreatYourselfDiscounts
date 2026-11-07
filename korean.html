@@ -53,6 +53,7 @@
   .from { font-size: 15px; font-weight: 800; color: #1f5f74; }
   .fen { font-size: 13px; color: #5b7a87; }
   .fhear { margin-top: 6px; border: 2px solid #e3c93f; background: #ffd94d; color: #6b5900; font-family: inherit; font-weight: 900; font-size: 13px; border-radius: 999px; padding: 6px 12px; cursor: pointer; }
+  .fcdate { text-align: center; font-weight: 800; color: #1f5f74; margin: 8px 0 0; font-size: 14.5px; }
   .quizchoices .vowel.right { outline: 4px solid #2e9e5b; outline-offset: 1px; }
   .quizchoices .vowel.wrong { outline: 4px solid #e5322d; outline-offset: 1px; }
   .kform { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
@@ -194,20 +195,11 @@
   </div>
 
   <div class="card">
-    <h2>🃏 Flashcards</h2>
-    <p>Look at the picture, guess the Korean, then tap the card to flip it over and check. The back always shows the word both ways: the written sound and the Hangul.</p>
-    <div class="fcards">
-      <div class="fcard"><div class="finner"><div class="fface ffront"><div class="fpic">📻</div><div class="fhint">tap to flip</div></div><div class="fface fback"><div class="fko">라디오</div><div class="from">ra-di-o</div><div class="fen">radio</div><button type="button" class="fhear" data-say="라디오" data-show="라디오 · ra-di-o · radio">🔊 Hear it</button></div></div></div>
-      <div class="fcard"><div class="finner"><div class="fface ffront"><div class="fpic">🧱</div><div class="fhint">tap to flip</div></div><div class="fface fback"><div class="fko">레고</div><div class="from">re-go</div><div class="fen">Lego</div><button type="button" class="fhear" data-say="레고" data-show="레고 · re-go · Lego">🔊 Hear it</button></div></div></div>
-      <div class="fcard"><div class="finner"><div class="fface ffront"><div class="fpic">🧼</div><div class="fhint">tap to flip</div></div><div class="fface fback"><div class="fko">비누</div><div class="from">bi-nu</div><div class="fen">soap</div><button type="button" class="fhear" data-say="비누" data-show="비누 · bi-nu · soap">🔊 Hear it</button></div></div></div>
-      <div class="fcard"><div class="finner"><div class="fface ffront"><div class="fpic">🚌</div><div class="fhint">tap to flip</div></div><div class="fface fback"><div class="fko">버스</div><div class="from">beo-seu</div><div class="fen">bus</div><button type="button" class="fhear" data-say="버스" data-show="버스 · beo-seu · bus">🔊 Hear it</button></div></div></div>
-      <div class="fcard"><div class="finner"><div class="fface ffront"><div class="fpic">🥛</div><div class="fhint">tap to flip</div></div><div class="fface fback"><div class="fko">우유</div><div class="from">u-yu</div><div class="fen">milk</div><button type="button" class="fhear" data-say="우유" data-show="우유 · u-yu · milk">🔊 Hear it</button></div></div></div>
-      <div class="fcard"><div class="finner"><div class="fface ffront"><div class="fpic">💧</div><div class="fhint">tap to flip</div></div><div class="fface fback"><div class="fko">물</div><div class="from">mul</div><div class="fen">water</div><button type="button" class="fhear" data-say="물" data-show="물 · mul · water">🔊 Hear it</button></div></div></div>
-      <div class="fcard"><div class="finner"><div class="fface ffront"><div class="fpic">🍎</div><div class="fhint">tap to flip</div></div><div class="fface fback"><div class="fko">사과</div><div class="from">sa-gwa</div><div class="fen">apple</div><button type="button" class="fhear" data-say="사과" data-show="사과 · sa-gwa · apple">🔊 Hear it</button></div></div></div>
-      <div class="fcard"><div class="finner"><div class="fface ffront"><div class="fpic">📖</div><div class="fhint">tap to flip</div></div><div class="fface fback"><div class="fko">책</div><div class="from">chaek</div><div class="fen">book</div><button type="button" class="fhear" data-say="책" data-show="책 · chaek · book">🔊 Hear it</button></div></div></div>
-      <div class="fcard"><div class="finner"><div class="fface ffront"><div class="fpic">🪑</div><div class="fhint">tap to flip</div></div><div class="fface fback"><div class="fko">의자</div><div class="from">ui-ja</div><div class="fen">chair</div><button type="button" class="fhear" data-say="의자" data-show="의자 · ui-ja · chair">🔊 Hear it</button></div></div></div>
-      <div class="fcard"><div class="finner"><div class="fface ffront"><div class="fpic">🚗</div><div class="fhint">tap to flip</div></div><div class="fface fback"><div class="fko">자동차</div><div class="from">ja-dong-cha</div><div class="fen">car</div><button type="button" class="fhear" data-say="자동차" data-show="자동차 · ja-dong-cha · car">🔊 Hear it</button></div></div></div>
-    </div>
+    <h2>🃏 Today's flashcards</h2>
+    <p>A fresh random mix of 10 words every day. Look at the picture, guess the Korean, then tap the card to flip it over and check. The back always shows the word both ways: the written sound and the Hangul.</p>
+    <p class="fcdate" id="fcdate"></p>
+    <div class="fcards" id="fcards"></div>
+    <button type="button" class="soundbtn" id="fcshuffle">🔀 Shuffle today's order</button>
   </div>
 
   <div class="card">
@@ -270,7 +262,7 @@
     if (!soundOn) return;
     say(text);
   }
-  var CLIPS = { "아": "a", "야": "ya", "어": "eo", "여": "yeo", "오": "o", "요": "yo", "우": "u", "유": "yu", "으": "eu", "이": "i", "라디오": "radio", "레고": "lego", "미래": "mirae", "비누": "binoo", "버스": "bus", "사랑": "sarang", "여자": "yeoja", "우유": "uyu", "가": "ga", "나": "na", "다": "da", "라": "ra", "마": "ma", "바": "ba", "사": "sa", "자": "ja", "차": "cha", "카": "ka", "타": "ta", "파": "pa", "하": "ha", "까": "kka", "따": "tta", "빠": "ppa", "싸": "ssa", "짜": "jja", "애": "ae", "얘": "yae", "에": "e", "예": "ye", "와": "wa", "왜": "wae", "외": "oe", "워": "wo", "웨": "we", "위": "wi", "의": "ui", "안녕하세요": "hello", "감사합니다": "gamsa", "네": "ne", "아니요": "aniyo", "미안해요": "mian", "사랑해요": "saranghae", "안녕히 가세요": "bye", "잘 자요": "goodnight", "물": "mul", "사과": "sagwa", "책": "chaek", "의자": "uija", "자동차": "jadongcha" };
+  var CLIPS = { "아": "a", "야": "ya", "어": "eo", "여": "yeo", "오": "o", "요": "yo", "우": "u", "유": "yu", "으": "eu", "이": "i", "라디오": "radio", "레고": "lego", "미래": "mirae", "비누": "binoo", "버스": "bus", "사랑": "sarang", "여자": "yeoja", "우유": "uyu", "가": "ga", "나": "na", "다": "da", "라": "ra", "마": "ma", "바": "ba", "사": "sa", "자": "ja", "차": "cha", "카": "ka", "타": "ta", "파": "pa", "하": "ha", "까": "kka", "따": "tta", "빠": "ppa", "싸": "ssa", "짜": "jja", "애": "ae", "얘": "yae", "에": "e", "예": "ye", "와": "wa", "왜": "wae", "외": "oe", "워": "wo", "웨": "we", "위": "wi", "의": "ui", "안녕하세요": "hello", "감사합니다": "gamsa", "네": "ne", "아니요": "aniyo", "미안해요": "mian", "사랑해요": "saranghae", "안녕히 가세요": "bye", "잘 자요": "goodnight", "물": "mul", "사과": "sagwa", "책": "chaek", "의자": "uija", "자동차": "jadongcha", "바나나": "banana", "오렌지": "orange", "달걀": "egg", "빵": "bread", "커피": "coffee", "고양이": "cat", "개": "dog", "새": "bird", "꽃": "flower", "나무": "tree", "집": "house", "문": "door", "전화": "phone", "컴퓨터": "computer", "학교": "school", "친구": "friend", "해": "sun", "달": "moon", "별": "star", "비": "rain" };
   var player = null;
   function playClip(path) {
     try {
@@ -447,12 +439,82 @@
 })();
 </script>
 <script>
-document.querySelectorAll(".fcard").forEach(function (card) {
-  card.addEventListener("click", function (e) {
-    if (e.target.closest && e.target.closest("[data-say]")) return;
-    card.classList.toggle("flip");
+(function () {
+  "use strict";
+  var FLASH = [
+    { pic: "📻", ko: "라디오", rom: "ra-di-o", en: "radio" }, { pic: "🧱", ko: "레고", rom: "re-go", en: "Lego" },
+    { pic: "🧼", ko: "비누", rom: "bi-nu", en: "soap" }, { pic: "🚌", ko: "버스", rom: "beo-seu", en: "bus" },
+    { pic: "🥛", ko: "우유", rom: "u-yu", en: "milk" }, { pic: "💧", ko: "물", rom: "mul", en: "water" },
+    { pic: "🍎", ko: "사과", rom: "sa-gwa", en: "apple" }, { pic: "📖", ko: "책", rom: "chaek", en: "book" },
+    { pic: "🪑", ko: "의자", rom: "ui-ja", en: "chair" }, { pic: "🚗", ko: "자동차", rom: "ja-dong-cha", en: "car" },
+    { pic: "🍌", ko: "바나나", rom: "ba-na-na", en: "banana" }, { pic: "🍊", ko: "오렌지", rom: "o-ren-ji", en: "orange" },
+    { pic: "🥚", ko: "달걀", rom: "dal-gyal", en: "egg" }, { pic: "🍞", ko: "빵", rom: "ppang", en: "bread" },
+    { pic: "☕", ko: "커피", rom: "keo-pi", en: "coffee" }, { pic: "🐱", ko: "고양이", rom: "go-yang-i", en: "cat" },
+    { pic: "🐶", ko: "개", rom: "gae", en: "dog" }, { pic: "🐦", ko: "새", rom: "sae", en: "bird" },
+    { pic: "🌸", ko: "꽃", rom: "kkot", en: "flower" }, { pic: "🌳", ko: "나무", rom: "na-mu", en: "tree" },
+    { pic: "🏠", ko: "집", rom: "jip", en: "house" }, { pic: "🚪", ko: "문", rom: "mun", en: "door" },
+    { pic: "📱", ko: "전화", rom: "jeon-hwa", en: "phone" }, { pic: "💻", ko: "컴퓨터", rom: "keom-pyu-teo", en: "computer" },
+    { pic: "🏫", ko: "학교", rom: "hak-gyo", en: "school" }, { pic: "🧑‍🤝‍🧑", ko: "친구", rom: "chin-gu", en: "friend" },
+    { pic: "☀️", ko: "해", rom: "hae", en: "sun" }, { pic: "🌙", ko: "달", rom: "dal", en: "moon" },
+    { pic: "⭐", ko: "별", rom: "byeol", en: "star" }, { pic: "🌧️", ko: "비", rom: "bi", en: "rain" }
+  ];
+  function rngFor(str) {
+    var h = 1779033703;
+    for (var i = 0; i < str.length; i++) { h = Math.imul(h ^ str.charCodeAt(i), 3432918353); h = (h << 13) | (h >>> 19); }
+    return function () {
+      h = Math.imul(h ^ (h >>> 16), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909);
+      return ((h ^= h >>> 16) >>> 0) / 4294967296;
+    };
+  }
+  function shuffled(arr, rand) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) { var k = Math.floor(rand() * (i + 1)); var t = a[i]; a[i] = a[k]; a[k] = t; }
+    return a;
+  }
+  function pickFor(dateStr) { return shuffled(FLASH, rngFor("tyd-flash-" + dateStr)).slice(0, 10); }
+  function todayStr() { var d = new Date(); function p(x) { return (x < 10 ? "0" : "") + x; } return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()); }
+  var grid = document.getElementById("fcards"), dateEl = document.getElementById("fcdate"), shuf = document.getElementById("fcshuffle");
+  if (!grid) return;
+  var todays = pickFor(todayStr());
+  function cardHTML(w) {
+    return '<div class="finner"><div class="fface ffront"><div class="fpic">' + w.pic + '</div><div class="fhint">tap to flip</div></div>' +
+      '<div class="fface fback"><div class="fko">' + w.ko + '</div><div class="from">' + w.rom + '</div><div class="fen">' + w.en + '</div>' +
+      '<button type="button" class="fhear" data-ko="' + w.ko + '" data-show="' + w.ko + " · " + w.rom + " · " + w.en + '">🔊 Hear it</button></div></div>';
+  }
+  function render(list) {
+    grid.innerHTML = "";
+    list.forEach(function (w) {
+      var c = document.createElement("div");
+      c.className = "fcard";
+      c.innerHTML = cardHTML(w);
+      grid.appendChild(c);
+    });
+  }
+  if (dateEl) {
+    var label = "";
+    try { label = new Date().toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" }); } catch (e) {}
+    dateEl.textContent = "Today's mix · " + label;
+  }
+  render(todays);
+  grid.addEventListener("click", function (e) {
+    var hear = e.target.closest ? e.target.closest(".fhear") : null;
+    if (hear) {
+      var line = document.getElementById("sayline");
+      var show = hear.getAttribute("data-show");
+      if (window.TYDKorean && window.TYDKorean.isOn()) {
+        if (line) line.innerHTML = show + "<small>Playing out loud now, listen and repeat.</small>";
+        window.TYDKorean.playFor(hear.getAttribute("data-ko"));
+      } else if (line) {
+        line.innerHTML = show + "<small>Sound is off, so this stayed quiet. Tap the Sound button to hear it.</small>";
+      }
+      return;
+    }
+    var card = e.target.closest ? e.target.closest(".fcard") : null;
+    if (card) card.classList.toggle("flip");
   });
-});
+  if (shuf) shuf.addEventListener("click", function () { render(shuffled(todays, Math.random)); });
+  window.TYDFLASH = { pool: FLASH, pickFor: pickFor };
+})();
 </script>
 <script src="site-nav.js"></script>
 </body>
