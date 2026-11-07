@@ -120,8 +120,11 @@
     if (!soundOn) { try { window.speechSynthesis.cancel(); } catch (e) {} }
     paintBtn();
     if (soundOn) {
-      var heard = say("\uC548\uB155\uD558\uC138\uC694");
-      if (line) line.innerHTML = "Sound is on." + (heard ? " That was a test hello (annyeonghaseyo). If you heard it, tap any letter or word to hear that instead." : " This device does not seem to have a speaking voice, so taps will show the pronunciation in writing instead.") + "<small>Your choice is remembered on this device.</small>";
+      playClip("audio/ko/hello.mp3").then(function (ok) {
+        if (!ok) ok = say("안녕하세요");
+        var heard = ok;
+        if (line) line.innerHTML = "Sound is on." + (heard ? " That was a test hello (annyeonghaseyo). If you heard it, tap any letter or word to hear that instead." : " The sound file would not play here, so taps will show the pronunciation in writing instead.") + "<small>Your choice is remembered on this device.</small>";
+      });
     } else {
       if (line) line.innerHTML = "Sound is off. Taps will only show the pronunciation, nice and quiet.<small>Your choice is remembered on this device.</small>";
     }
@@ -141,12 +144,29 @@
     if (!soundOn) return;
     say(text);
   }
+  var CLIPS = { "아": "a", "야": "ya", "어": "eo", "여": "yeo", "오": "o", "요": "yo", "우": "u", "유": "yu", "으": "eu", "이": "i", "라디오": "radio", "레고": "lego", "미래": "mirae", "비누": "binoo", "버스": "bus", "사랑": "sarang", "여자": "yeoja", "우유": "uyu" };
+  var player = null;
+  function playClip(path) {
+    try {
+      if (!player) player = new Audio();
+      player.pause();
+      player.src = path;
+      var p = player.play();
+      if (p && p.then) return p.then(function () { return true; }).catch(function () { return false; });
+      return Promise.resolve(true);
+    } catch (e) { return Promise.resolve(false); }
+  }
+  function playFor(text) {
+    var slug = CLIPS[text];
+    if (!slug) { say(text); return; }
+    playClip("audio/ko/" + slug + ".mp3").then(function (ok) { if (!ok) say(text); });
+  }
   document.querySelectorAll("[data-say]").forEach(function (el) {
     el.setAttribute("role", "button");
     el.setAttribute("tabindex", "0");
     function go() {
       if (line) line.innerHTML = el.getAttribute("data-show") + (soundOn ? "<small>Playing out loud now, listen and repeat.</small>" : "<small>Sound is off, so this stayed quiet. Tap the Sound button to hear it.</small>");
-      speak(el.getAttribute("data-say"));
+      if (soundOn) playFor(el.getAttribute("data-say"));
     }
     el.addEventListener("click", go);
     el.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
