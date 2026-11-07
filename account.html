@@ -39,7 +39,8 @@
   .dashitem { background: #fbfdfe; border: 1.5px solid #e3f0f5; border-radius: 12px; padding: 9px 12px; margin: 0 0 7px; font-size: 14px; line-height: 1.45; }
   .dashitem a { color: #1f5f74; font-weight: 700; }
   .prefrow { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 8px 0 4px; }
-  .prefrow label { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-size: 14px; font-weight: 600; color: #23414d; cursor: pointer; }
+  .prefrow .prefgroup { flex: 0 0 100%; font-weight: 800; color: #1f5f74; font-size: 13px; margin-top: 8px; }
+    .prefrow label { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-size: 14px; font-weight: 600; color: #23414d; cursor: pointer; }
   .prefrow input { width: auto; accent-color: #1f5f74; }
   footer { margin-top: 26px; text-align: center; }
   .disc { font-size: 12px; color: #5b7d89; line-height: 1.5; max-width: 480px; margin: 10px auto 0; }
@@ -85,12 +86,29 @@
     <h3 style="color:#1f5f74; font-size:15px; margin:16px 0 6px;">Deal alert choices 🔔</h3>
     <p style="font-size:14px;">Pick the kinds of alerts you want to see. Leave everything unchecked to see them all.</p>
     <div class="prefrow" id="alertprefs">
-      <label><input type="checkbox" value="amazon-baby"> Amazon &amp; Baby</label>
-      <label><input type="checkbox" value="home"> Home</label>
-      <label><input type="checkbox" value="tech"> Tech</label>
-      <label><input type="checkbox" value="beauty"> Beauty &amp; Self-Care</label>
-      <label><input type="checkbox" value="food"> Food &amp; Recipes</label>
-      <label><input type="checkbox" value="price-drops"> Big price drops</label>
+      <span class="prefgroup">Shopping</span>
+      <label><input type="checkbox" value="amazon-baby"> 🛍️ Amazon &amp; Baby</label>
+      <label><input type="checkbox" value="amazon"> 🛒 Amazon Deals</label>
+      <label><input type="checkbox" value="clothes"> 👕 Clothes &amp; Shoes</label>
+      <label><input type="checkbox" value="essentials"> 🧺 Everyday Essentials</label>
+      <label><input type="checkbox" value="home"> 🏠 Home</label>
+      <label><input type="checkbox" value="kitchen"> 🍳 Kitchen</label>
+      <label><input type="checkbox" value="tech"> 🔌 Tech</label>
+      <label><input type="checkbox" value="beauty"> 💄 Beauty &amp; Self-Care</label>
+      <label><input type="checkbox" value="health"> 💪 Health &amp; Wellness</label>
+      <label><input type="checkbox" value="pets"> 🐾 Pets</label>
+      <label><input type="checkbox" value="kids"> 🧸 Kids, Toys &amp; Games</label>
+      <span class="prefgroup">Ways to save</span>
+      <label><input type="checkbox" value="price-drops"> 📉 Big price drops</label>
+      <label><input type="checkbox" value="coupons"> 🎟️ Coupon Codes</label>
+      <label><input type="checkbox" value="freebies"> 🎁 Freebies &amp; Samples</label>
+      <label><input type="checkbox" value="back-in-stock"> 🔔 Back in Stock</label>
+      <label><input type="checkbox" value="seasonal"> 🎉 Seasonal Sales</label>
+      <span class="prefgroup">Around the Pond</span>
+      <label><input type="checkbox" value="food"> 🍝 Food &amp; Recipes</label>
+      <label><input type="checkbox" value="new-brands"> ✨ New Brands &amp; Drops</label>
+      <label><input type="checkbox" value="giveaways"> 🏆 Giveaways</label>
+      <label><input type="checkbox" value="travel"> ✈️ Travel Deals</label>
     </div>
     <p id="prefstat" style="font-size:13px; color:#5b7d89; margin:2px 0 0;"></p>
     <h3 style="color:#1f5f74; font-size:15px; margin:16px 0 6px;">Deal alerts from TYD 🔔</h3>
